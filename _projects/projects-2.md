@@ -1,0 +1,7 @@
+---
+title: "Projects item number 1"
+excerpt: "The purpose of this project is to participate in the Innovative AI Applications EEE Contest 2024, which is currently ongoing. We have developed a mobile phone app-controlled turret-equipped vehicle capable of automatic targeting, firing soft foam projectiles, and movement. The Raspberry Pi serves as the main controller, establishing a TCP connection with the phone through a mobile hotspot. The vehicle can stream real-time camera footage to the phone while receiving movement commands via buttons on the app. The foam projectile launcher features an 8-round magazine for rapid fire and incorporates mathematical modeling to calculate distances to stationary circular targets based on their apparent size, enabling precision shooting. A distinctive feature of this project is its integration with GPT-4. My custom app implements this AI system, allowing users to converse with the vehicle, which responds through real-time text-to-speech. The pan-tilt mechanism enables expressive movements like nodding and shaking, while a front-mounted dot-matrix screen visually displays the vehicle's emotional states - an engaging interactive element. Additional functionalities are currently under development to enhance these capabilities. <br/><img src='/images/500x300.png'>"
+collection: projects
+---
+
+This is an item in your projects. It can be have images or nice text. If you name the file .md, it will be parsed as markdown. If you name the file .html, it will be parsed as HTML. 

@@ -24,45 +24,40 @@ High-achieving **Electrical Engineering** undergraduate (CGPA 3.88/4.3) at The H
 ---
 
 ## Projects
-For more information about this part, I suggest you go to [Projects]() in the navigation bar above
+❗️For more information about this part, I suggest you go to [Projects](/projects/) in the navigation bar above
 
-### 🏆 Champion Project: AI-Powered Electromagnetic Cannon
-**EIE Microcontroller Contest 2023-2024**  
-Python & C#
-- Real-time object tracking with OpenCV
-- PID-controlled electromagnetic coil optimization
-- Raspberry Pi-based pan-tilt targeting system
+### AI-Powered Electromagnetic Cannon
+An electromagnetic cannon that can aim itself and shoot magnets at high speeds
 
-### 🤖 TCP-Controlled AI Vision RC Car
-**Autonomous Robotic System**  
-Python
-- GPT-4 integrated Android control interface
-- Dual-mode operation (manual/autonomous)
-- <150ms latency via multithreaded Python
+[Click Me For More Information](/projects/)
+
+### TCP-Controlled AI Vision RC Car
+An intelligent foam projectile launcher toy car with First-Person View capability and real-time smartphone control
+
+[Click Me For More Information](/projects/)
 
 ---
 
 ## Awards & Honors
-1. 🥇 **Champion & Design Award** - EIE Microcontroller Contest (2024)
-2. 🥉 **Third Prize** - 10th HK University Innovation Competition
-3. 📜 **Dean's Honours List** - PolyU Faculty of Engineering (2023)
+* 🥇 **Champion & Design Award** - EIE Microcontroller Contest (2024)
+* 🥉 **Third Prize** - 10th HK University Innovation Competition
+* 📜 **Dean's Honours List** - PolyU Faculty of Engineering (2023)
+* 🏅 **Gold (Global Ranking)** - British Physics Olympiad (BPhO) 2020-2021 Intermediate Physics Challenge
+* 📜 **Honor Roll Certificate (Top 25%)** - 2020-2021 Mathematics Leagues Contest in China
+* 📜 **Honor Roll Certificate (Top 25%)** - 2019-2020 Mathematics Leagues Contest in China
+* 🥉 **Bronze (National Ranking)** - 2019 Canadian Open Mathematics Challenge (COMC)
 
 ---
 
 ## Technical Toolkit
 **Languages:**  
-`Python` | `C/C++` | `MATLAB` | `Verilog`
+`Python` | `C/C++` | `MATLAB`
 
 **Technologies:**  
-`Raspberry Pi` | `OpenCV` | `TensorFlow` | `Altium Designer`
+`Raspberry Pi` | `OpenCV` | `TensorFlow` | `Altium Designer` | `Arduino` | `SolidWorks`
 
 **Languages:**  
 🇨🇳 Mandarin (Native) | 🇬🇧 English (Fluent) | 🇭🇰 Cantonese (Conversational)
 
 ---
 
-## Research Interests
-- Robotics control systems 🤖
-- Edge AI implementations 🧠
-- Electromechanical integration ⚙️
-- Industrial automation solutions 🏭
