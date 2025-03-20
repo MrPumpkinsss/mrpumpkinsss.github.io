@@ -6,58 +6,122 @@ redirect_from:
   - /about/
   - /about.html
 ---
+
+<style>
+/* 个人主页内容区块样式 */
+.about-section {
+  background: #fff;
+  padding: 20px;
+  margin: 20px auto;
+  max-width: 800px;
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+/* 悬浮效果 */
+.about-section:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 6px 12px rgba(0,0,0,0.15);
+}
+
+/* 标题样式 */
+/* 修改标题样式：去除前置留白 */
+.about-section h2 {
+  font-size: 1.75rem;
+  margin: 0 0 15px;
+  text-align: center;
+  font-weight: bold;
+  color: #333;
+  text-indent: 0;    /* 去除首行缩进 */
+  padding-left: 0;   /* 去除可能存在的内边距 */
+}
+
+/* 移动端适配 */
+@media (max-width: 600px) {
+  .about-section {
+    padding: 15px;
+  }
+  
+  .about-section h2 {
+    font-size: 1.5rem;
+  }
+}
+</style>
+
 Welcome to my homepage. My name is **Ma Jiawei**. My birthday is August 12, 2004. I am currently a third-year undergraduate student at [The Hong Kong Polytechnic University](https://www.polyu.edu.hk/en/). You can learn more about me in the information below or in the navigation bar above.
 
-## Professional Profile
-High-achieving **Electrical Engineering** undergraduate (CGPA 3.88/4.3) at The Hong Kong Polytechnic University with secondary major in **AI & Data Analytics**. Award-winning innovator with proven expertise in:
-- Embedded systems design 🖥️
-- Computer vision applications 👁️
-- IoT integration ⚡
+<div class="about-section">
+  <h2>My Profile</h2>
+  <p>
+    High-achieving <strong>Electrical Engineering</strong> undergraduate (CGPA 3.88/4.3) at The Hong Kong Polytechnic University with a secondary major in <strong>AI & Data Analytics</strong>. Award-winning innovator with proven expertise in:
+  </p>
+  <ul>
+    <li>Embedded systems design 🖥️</li>
+    <li>Computer vision applications 👁️</li>
+    <li>IoT integration ⚡</li>
+  </ul>
+</div>
 
----
+<div class="about-section">
+  <h2>Education</h2>
+  <h3>The Hong Kong Polytechnic University</h3>
+  <p>
+    <strong>BEng (HONS) Electrical Engineering With A Secondary Major In AIDA</strong><br>
+    <em>Sep.2022 - June.2026 (Expected)</em> | <em>Current CGPA: 3.88/4.3</em>
+  </p>
+</div>
 
-## Education
-### The Hong Kong Polytechnic University
-**BEng (Hons) Electrical Engineering with AI & Data Analytics**  
-`Sep.2022 - June.2026 (Expected)` | `Current CGPA: 3.88/4.3`  
+<div class="about-section">
+  <h2>Projects</h2>
+  <p>❗️For more information about this part, I suggest you go to the <a href="/projects/">Projects</a> section in the navigation bar above.</p>
+  
+  <h3>AI-Powered Electromagnetic Cannon</h3>
+  <p>
+    An electromagnetic cannon that can aim itself and shoot magnets at high speeds.
+  </p>
+  <p><a href="/projects/">Click Me For More Information</a></p>
+  
+  <h3>TCP-Controlled AI Vision RC Car</h3>
+  <p>
+    An intelligent foam projectile launcher toy car with First-Person View capability and real-time smartphone control.
+  </p>
+  <p><a href="/projects/">Click Me For More Information</a></p>
+  
+  <!-- 导航箭头区域：文本及箭头按钮 -->
+  <div style="text-align: center; margin-top: 20px;">
+    <a href="/projects/" style="text-decoration: none; font-size: 1.2rem;">
+      Click here to learn more →
+    </a>
+  </div>
+</div>
 
----
+<div class="about-section">
+  <h2>Awards &amp; Honors</h2>
+  <ul>
+    <li>🥇 <strong>Champion &amp; Design Award</strong> - EIE Microcontroller Contest (2024)</li>
+    <li>🥉 <strong>Third Prize</strong> - 10th HK University Innovation Competition</li>
+    <li>📜 <strong>Dean's Honours List</strong> - PolyU Faculty of Engineering (2023)</li>
+    <li>🏅 <strong>Gold (Global Ranking)</strong> - British Physics Olympiad (BPhO) 2020-2021 Intermediate Physics Challenge</li>
+    <li>📜 <strong>Honor Roll Certificate (Top 25%)</strong> - 2020-2021 Mathematics Leagues Contest in China</li>
+    <li>📜 <strong>Honor Roll Certificate (Top 25%)</strong> - 2019-2020 Mathematics Leagues Contest in China</li>
+    <li>🥉 <strong>Bronze (National Ranking)</strong> - 2019 Canadian Open Mathematics Challenge (COMC)</li>
+  </ul>
+</div>
 
-## Projects
-❗️For more information about this part, I suggest you go to [Projects](/projects/) in the navigation bar above
-
-### AI-Powered Electromagnetic Cannon
-An electromagnetic cannon that can aim itself and shoot magnets at high speeds
-
-[Click Me For More Information](/projects/)
-
-### TCP-Controlled AI Vision RC Car
-An intelligent foam projectile launcher toy car with First-Person View capability and real-time smartphone control
-
-[Click Me For More Information](/projects/)
-
----
-
-## Awards & Honors
-* 🥇 **Champion & Design Award** - EIE Microcontroller Contest (2024)
-* 🥉 **Third Prize** - 10th HK University Innovation Competition
-* 📜 **Dean's Honours List** - PolyU Faculty of Engineering (2023)
-* 🏅 **Gold (Global Ranking)** - British Physics Olympiad (BPhO) 2020-2021 Intermediate Physics Challenge
-* 📜 **Honor Roll Certificate (Top 25%)** - 2020-2021 Mathematics Leagues Contest in China
-* 📜 **Honor Roll Certificate (Top 25%)** - 2019-2020 Mathematics Leagues Contest in China
-* 🥉 **Bronze (National Ranking)** - 2019 Canadian Open Mathematics Challenge (COMC)
-
----
-
-## Technical Toolkit
-**Languages:**  
-`Python` | `C/C++` | `MATLAB`
-
-**Technologies:**  
-`Raspberry Pi` | `OpenCV` | `TensorFlow` | `Altium Designer` | `Arduino` | `SolidWorks`
-
-**Languages:**  
-🇨🇳 Mandarin (Native) | 🇬🇧 English (Fluent) | 🇭🇰 Cantonese (Conversational)
-
----
-
+<div class="about-section">
+  <h2>Technical Toolkit</h2>
+  <p>
+    <strong>Programming Languages:</strong><br>
+    <code>Python</code> &nbsp; <code>C/C++</code> &nbsp; <code>MATLAB</code>
+  </p>
+  <p>
+    <strong>Technologies:</strong><br>
+    <code>Raspberry Pi</code> &nbsp; <code>OpenCV</code> &nbsp; <code>TensorFlow</code> &nbsp; <code>Altium Designer</code> &nbsp; <code>Arduino</code> &nbsp; <code>SolidWorks</code>
+  </p>
+  <p>
+    <strong>Spoken Languages:</strong><br>
+    🇨🇳 Mandarin (Native) &nbsp; 🇬🇧 English (Fluent) &nbsp; 🇭🇰 Cantonese (Conversational)
+  </p>
+</div>

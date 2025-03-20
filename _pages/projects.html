@@ -7,8 +7,108 @@ author_profile: true
 
 {% include base_path %}
 
+<style>
+  /* 目录 (TOC) 样式 */
+  .toc {
+    border: 1px solid #ddd;
+    background-color: #f9f9f9;
+    padding: 20px;
+    border-radius: 8px;
+    margin: 0 auto 40px auto;
+    max-width: 800px;
+    /* 添加整体悬浮效果 */
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+  }
+  
+  .toc:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 6px 12px rgba(0,0,0,0.15);
+  }
+  
+  .toc h2 {
+  font-size: 1.75rem;
+  margin-bottom: 15px;
+  text-align: center;
+  font-weight: bold;
+  color: #333;
+  text-transform: none; /* 确保标题不会全部大写 */
+  }
+
+  
+  .toc ul {
+    list-style: none;
+    padding: 0;
+  }
+  
+  .toc li {
+    margin-bottom: 10px;
+  }
+  
+  /* 添加目录选项的悬浮效果 */
+  .toc li a {
+  display: block;
+  padding: 8px 12px;
+  text-decoration: none;
+  color: #007acc;
+  font-weight: 500;
+  background: #fff;
+  border: 1px solid transparent;
+  border-radius: 4px;
+  transition: background 0.3s, border-color 0.3s, transform 0.3s;
+  text-transform: none; /* 确保链接文本不会全部大写 */
+  }
+  
+  .toc li a:hover {
+    background: #007acc;
+    color: #fff;
+    border-color: #005f99;
+    transform: translateX(5px); /* 添加轻微向右偏移效果 */
+  }
+  
+  /* 针对移动设备的适配 */
+  @media (max-width: 600px) {
+    .toc {
+      padding: 15px;
+    }
+  
+    .toc h2 {
+      font-size: 1.5rem;
+    }
+    
+    .toc li a {
+      padding: 6px 10px;
+    }
+  }
+  
+  /* 每个 project block 的样式和悬停效果 */
+  .project-block {
+    background: #fff;
+    padding: 20px;
+    margin: 20px auto;
+    max-width: 800px;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+  }
+  
+  .project-block:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 6px 12px rgba(0,0,0,0.15);
+  }
+</style>
+
+<nav class="toc">
+  <h2>Project Directory</h2>
+  <ul>
+    {% for post in site.projects %}
+      <li><a href="#project-{{ post.title | slugify }}">{{ post.title }}</a></li>
+    {% endfor %}
+  </ul>
+</nav>
 
 {% for post in site.projects %}
-  {% include archive-single.html %}
+  <div id="project-{{ post.title | slugify }}" class="project-block">
+    {% include archive-single.html %}
+  </div>
 {% endfor %}
-
