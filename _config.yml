@@ -22,12 +22,12 @@ repository               : "mrpumpkinsss/mrpumpkinsss.github.io"
 #               Additional customization can be done by editing /_includes/author-profile.html
 author:
   # Biographic information
-  avatar           : "profile.png"
+  avatar           : "NCG414.jpg"
   name             : "MA Jiawei"
   pronouns         : # example: "she/her"  
-  bio              : "I am the best"
-  location         : "Earth"
-  employer         : "The Hong Kong Polytechnic University"
+  bio              : "A year 3 EE student who is studying in PolyU"
+  location         : "Hong Kong"
+  employer         : "PolyU"
   uri              : https://mrpumpkinsss.github.io/
   email            : "mrpumpkin3180@gmail.com" 
 
@@ -219,7 +219,7 @@ collections:
   publications:
     output: true
     permalink: /:collection/:path/
-  portfolio:
+  projects:
     output: true
     permalink: /:collection/:path/
   talks:
@@ -265,10 +265,10 @@ defaults:
       author_profile: true
       share: true
       comments: true
-  # _portfolio
+  # _projects
   - scope:
       path: ""
-      type: portfolio
+      type: projects
     values:
       layout: single
       author_profile: true
