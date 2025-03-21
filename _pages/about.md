@@ -8,11 +8,11 @@ redirect_from:
 ---
 
 <style>
-/* 个人主页内容区块样式 */
+/* 个人主页内容区块样式，效果与 Blog/Projects 页面相同 */
 .about-section {
   background: #fff;
   padding: 20px;
-  margin: 20px auto;
+  margin: 20px auto;     /* auto 会使信息框水平居中 */
   max-width: 800px;
   border: 1px solid #ddd;
   border-radius: 8px;
@@ -26,16 +26,15 @@ redirect_from:
   box-shadow: 0 6px 12px rgba(0,0,0,0.15);
 }
 
-/* 标题样式 */
-/* 修改标题样式：去除前置留白 */
+/* 标题样式：去除首行缩进和内边距 */
 .about-section h2 {
   font-size: 1.75rem;
   margin: 0 0 15px;
   text-align: center;
   font-weight: bold;
   color: #333;
-  text-indent: 0;    /* 去除首行缩进 */
-  padding-left: 0;   /* 去除可能存在的内边距 */
+  text-indent: 0;
+  padding-left: 0;
 }
 
 /* 移动端适配 */
