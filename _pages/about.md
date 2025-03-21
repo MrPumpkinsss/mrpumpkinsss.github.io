@@ -80,13 +80,13 @@ Welcome to my homepage. My name is **Ma Jiawei**. My birthday is August 12, 2004
   <p>
     An electromagnetic cannon that can aim itself and shoot magnets at high speeds.
   </p>
-  <p><a href="/projects/">Click Me For More Information</a></p>
+  <p><a href="/projects/Electromagnetic%20Auto-Aiming%20Toy%20Shooter/">Click Me For More Information</a></p>
   
-  <h3>TCP-Controlled AI Vision RC Car</h3>
+  <h3>AI-Powered Smart Auto-Aiming RC Toy Car with Turret</h3>
   <p>
     An intelligent foam projectile launcher toy car with First-Person View capability and real-time smartphone control.
   </p>
-  <p><a href="/projects/">Click Me For More Information</a></p>
+  <p><a href="/projects/AI-Powered%20Smart%20Auto-Aiming%20RC%20Toy%20Car%20with%20Turret/">Click Me For More Information</a></p>
   
   <!-- 导航箭头区域：文本及箭头按钮 -->
   <div style="text-align: center; margin-top: 20px;">
