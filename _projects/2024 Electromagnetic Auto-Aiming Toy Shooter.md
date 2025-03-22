@@ -1,5 +1,5 @@
 ---
-title: "Electromagnetic Auto-Aiming Toy Shooter"
+title: "2024 Electromagnetic Auto-Aiming Toy Shooter"
 excerpt: >
   This award-winning project integrates Raspberry Pi (for AI vision 
   tracking via I2C) and Arduino (for PID-controlled pan-tilt targeting). 

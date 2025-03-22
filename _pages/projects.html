@@ -26,14 +26,13 @@ author_profile: true
   }
   
   .toc h2 {
-  font-size: 1.75rem;
-  margin-bottom: 15px;
-  text-align: center;
-  font-weight: bold;
-  color: #333;
-  text-transform: none; /* 确保标题不会全部大写 */
+    font-size: 1.75rem;
+    margin-bottom: 15px;
+    text-align: center;
+    font-weight: bold;
+    color: #333;
+    text-transform: none; /* 确保标题不会全部大写 */
   }
-
   
   .toc ul {
     list-style: none;
@@ -46,16 +45,16 @@ author_profile: true
   
   /* 添加目录选项的悬浮效果 */
   .toc li a {
-  display: block;
-  padding: 8px 12px;
-  text-decoration: none;
-  color: #007acc;
-  font-weight: 500;
-  background: #fff;
-  border: 1px solid transparent;
-  border-radius: 4px;
-  transition: background 0.3s, border-color 0.3s, transform 0.3s;
-  text-transform: none; /* 确保链接文本不会全部大写 */
+    display: block;
+    padding: 8px 12px;
+    text-decoration: none;
+    color: #007acc;
+    font-weight: 500;
+    background: #fff;
+    border: 1px solid transparent;
+    border-radius: 4px;
+    transition: background 0.3s, border-color 0.3s, transform 0.3s;
+    text-transform: none; /* 确保链接文本不会全部大写 */
   }
   
   .toc li a:hover {
@@ -98,16 +97,18 @@ author_profile: true
   }
 </style>
 
+{% assign sorted_projects = site.projects | sort: 'title' | reverse %}
+
 <nav class="toc">
   <h2>Project Directory</h2>
   <ul>
-    {% for post in site.projects %}
+    {% for post in sorted_projects %}
       <li><a href="#project-{{ post.title | slugify }}">{{ post.title }}</a></li>
     {% endfor %}
   </ul>
 </nav>
 
-{% for post in site.projects %}
+{% for post in sorted_projects %}
   <div id="project-{{ post.title | slugify }}" class="project-block">
     {% include archive-single.html %}
   </div>
