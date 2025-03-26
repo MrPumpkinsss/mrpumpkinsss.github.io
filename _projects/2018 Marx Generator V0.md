@@ -1,7 +1,7 @@
 ---
 title: "2018 Marx Generator V0"
 excerpt: >
-  In junior school in 2018, I was inspired by a YouTube Marx generator video to build one myself. With limited funds, I crafted a cardboard framework using nails, wires, and iron rods, and handmade film capacitors from aluminum foil and adhesive tape—one reaching 1.5 meters in length. Using a compact high-voltage generator from Taobao, I eventually produced 1 cm electric arcs, and the project even led me to buy my first multimeter.
+  In 2018, during junior high, I built a Marx generator using cardboard, nails, wires, and handmade film capacitors up to 1.5m long. After many iterations, powered by a high-voltage generator, I successfully produced 1 cm electric arcs.
 
   <div style="display: flex; flex-wrap: wrap; justify-content: center; gap: 20px; margin-top: 10px;">
     <figure style="margin: 0; flex-basis: 45%; text-align: center;">
