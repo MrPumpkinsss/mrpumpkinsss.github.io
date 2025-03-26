@@ -1,7 +1,7 @@
 ---
 title: 'Launching My Personal Website Today'
 date: 2025/3/22
-permalink: /posts/Launching My Personal Website Today/
+permalink: /posts/2025-03-22-Launching My Personal Website Today/
 tags:
   - Website Update Log
 ---
