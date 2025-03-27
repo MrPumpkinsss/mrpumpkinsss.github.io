@@ -1,7 +1,7 @@
 ---
 title: "2025 AI-Powered Smart Auto-Aiming RC Toy Car with Turret"
 excerpt: >
-  Our project for the Innovative AI Applications EEE Contest 2024 is a mobile-controlled turret vehicle with AI integration. It features auto-targeting, real-time video streaming, GPT-4-powered interaction, and expressive movements for an engaging experience.
+  My project for the Innovative AI Applications EEE Contest 2024 is a mobile-controlled turret vehicle with AI integration. It features auto-targeting, real-time video streaming, GPT-4-powered interaction, and expressive movements for an engaging experience.
 
   <div style="display: flex; flex-wrap: wrap; justify-content: center; gap: 20px; margin-top: 10px;">
     <figure style="margin: 0; flex-basis: 45%; text-align: center;">
