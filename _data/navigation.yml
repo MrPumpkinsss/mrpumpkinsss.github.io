@@ -19,7 +19,10 @@ main:
     
   - title: "Projects"
     url: /projects/
-        
+
+  - title: "Mini-Projects"
+    url: /miniprojects/
+
   - title: "Blog Posts"
     url: /blogs/
     
