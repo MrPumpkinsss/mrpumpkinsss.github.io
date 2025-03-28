@@ -1,5 +1,5 @@
 ---
-title: "2024 Electromagnetic Auto-Aiming Toy Shooter"
+title: 2024 Electromagnetic Auto-Aiming Toy Shooter <img src="https://github.githubassets.com/images/modules/logos_page/GitHub-Mark.png" alt="GitHub" style="width:28px; vertical-align:middle; margin-right:8px;">
 excerpt: >
   This award-winning project integrates Raspberry Pi (for AI vision 
   tracking via I2C) and Arduino (for PID-controlled pan-tilt targeting). 
@@ -20,14 +20,14 @@ excerpt: >
 collection: projects
 ---
 
+**<img src="https://github.githubassets.com/images/modules/logos_page/GitHub-Mark.png" alt="GitHub" style="width:28px; vertical-align:middle; margin-right:8px;">GitHub Link: [https://github.com/MrPumpkinsss/Electromagnetic-Auto-Aim-Shooter](https://github.com/MrPumpkinsss/Electromagnetic-Auto-Aim-Shooter)**
+
 This project won the EIE Microcontroller Application Design Contest (2023-24). It combines Raspberry Pi and Arduino. Raspberry Pi is responsible for image recognition and transmits target coordinate information to Arduino via I2C. Arduino adjusts the pan-tilt with PID control to aim at the target.
 
 Regarding the electromagnetic gun, the design of its circuit is the most challenging part. The capacitor must first be charged to approximately 250V in about ten seconds. The Arduino trigger signal is controlled by a mobile phone Bluetooth signal to activate the thyristor, allowing a current of up to tens of amperes to flow through the coil. This generates a strong magnetic field that propels the magnet out of the barrel at high speed.
 
 In order to accelerate the magnet further, this project uses a dual-stage coil design. By precisely controlling the time difference between the coil activations, the magnet is accelerated more efficiently compared to single-stage designs.
 
-<img src="https://github.githubassets.com/images/modules/logos_page/GitHub-Mark.png" alt="GitHub" style="width:24px; vertical-align:middle; margin-right:8px;">
-[Learn More]()
 
 
 ---
@@ -37,15 +37,23 @@ In order to accelerate the magnet further, this project uses a dual-stage coil d
 ### Videos
 
 <div style="display: flex; flex-wrap: wrap; gap: 20px; justify-content: center; margin-top: 20px;">
-  <div style="flex: 1 1 300px; max-width: 500px;">
-    <video controls style="width:100%;">
+  <div style="flex: 1 1 300px; max-width: 500px; max-height: 60vh; aspect-ratio: 16/9;">
+    <video controls style="width:100%; height:100%; object-fit: cover;">
       <source src="/images/shooter.mp4" type="video/mp4">
       Your browser does not support the video tag.
     </video>
   </div>
-  <div style="flex: 1 1 300px; max-width: 500px;">
-    <video controls style="width:100%;">
+
+  <div style="flex: 1 1 300px; max-width: 500px; max-height: 60vh; aspect-ratio: 16/9;">
+    <video controls style="width:100%; height:100%; object-fit: cover;">
       <source src="/images/TURRENT2.mp4" type="video/mp4">
+      Your browser does not support the video tag.
+    </video>
+  </div>
+
+  <div style="flex: 1 1 300px; max-width: 500px; max-height: 60vh; aspect-ratio: 16/9;">
+    <video controls style="width:100%; height:100%; object-fit: cover;">
+      <source src="/images/Video_35525464.mp4" type="video/mp4">
       Your browser does not support the video tag.
     </video>
   </div>
