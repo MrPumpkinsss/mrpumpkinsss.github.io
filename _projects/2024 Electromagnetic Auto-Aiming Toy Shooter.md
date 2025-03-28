@@ -97,4 +97,7 @@ In order to accelerate the magnet further, this project uses a dual-stage coil d
   <div style="text-align: center;">
     <img src="/images/IMG20240527143343.jpg" alt="IMG20240527143343" style="width: 100%; height: auto;">
   </div>
+  <div style="text-align: center;">
+    <img src="/images/Schematic.jpg" alt="IMG20240527143343" style="width: 100%; height: auto;">
+  </div>
 </div>
