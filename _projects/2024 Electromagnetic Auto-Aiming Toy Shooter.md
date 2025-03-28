@@ -37,22 +37,20 @@ In order to accelerate the magnet further, this project uses a dual-stage coil d
 ### Videos
 
 <div style="display: flex; flex-wrap: wrap; gap: 20px; justify-content: center; margin-top: 20px;">
-  <div style="flex: 1 1 300px; max-width: 500px; max-height: 60vh; aspect-ratio: 16/9;">
-    <video controls style="width:100%; height:100%; object-fit: cover;">
+  <div style="flex: 1 1 300px; max-width: 500px;">
+    <video controls style="width:100%;">
       <source src="/images/shooter.mp4" type="video/mp4">
       Your browser does not support the video tag.
     </video>
   </div>
-
-  <div style="flex: 1 1 300px; max-width: 500px; max-height: 60vh; aspect-ratio: 16/9;">
-    <video controls style="width:100%; height:100%; object-fit: cover;">
+  <div style="flex: 1 1 300px; max-width: 500px;">
+    <video controls style="width:100%;">
       <source src="/images/TURRENT2.mp4" type="video/mp4">
       Your browser does not support the video tag.
     </video>
   </div>
-
-  <div style="flex: 1 1 300px; max-width: 500px; max-height: 60vh; aspect-ratio: 16/9;">
-    <video controls style="width:100%; height:100%; object-fit: cover;">
+  <div style="flex: 1 1 300px; max-width: 500px;">
+    <video controls style="width:100%;">
       <source src="/images/Video_35525464.mp4" type="video/mp4">
       Your browser does not support the video tag.
     </video>
