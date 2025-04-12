@@ -26,6 +26,9 @@ main:
   - title: "Blog Posts"
     url: /blogs/
     
+  - title: "My RPI"
+    url: /MyRPI/
+    
   #- title: "CV"
    # url: /cv/
     

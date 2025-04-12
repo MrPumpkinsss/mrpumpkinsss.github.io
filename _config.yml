@@ -286,6 +286,16 @@ defaults:
       author_profile: true
       share: true
       comment: true
+
+  # _MyRPI
+  - scope:
+      path: ""
+      type: MyRPI
+    values:
+      layout: single
+      author_profile: true
+      share: true
+      comment: true
   # _talks
   - scope:
       path: ""

@@ -1,0 +1,136 @@
+---
+permalink: /MyRPI/
+author_profile: False
+---
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login Page</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f4f4f9;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+        }
+
+        .login-container {
+            background-color: #ffffff;
+            padding: 2rem;
+            border-radius: 8px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            width: 100%;
+            max-width: 800px; /* Increased width */
+            box-sizing: border-box;
+        }
+
+        .login-container h2 {
+            text-align: center;
+            margin-bottom: 1rem;
+            color: #333333;
+        }
+
+        .login-container label {
+            display: block;
+            font-weight: bold;
+            margin-bottom: 0.5rem;
+            color: #555555;
+        }
+
+        .login-container input {
+            width: 100%;
+            padding: 0.75rem;
+            margin-bottom: 1rem;
+            border: 1px solid #cccccc;
+            border-radius: 4px;
+            box-sizing: border-box;
+        }
+
+        .login-container button {
+            width: 100%;
+            padding: 0.75rem;
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            font-size: 1rem;
+            cursor: pointer;
+        }
+
+        .login-container button:hover {
+            background-color: #45a049;
+        }
+
+        .error-message {
+            color: red;
+            font-size: 0.9rem;
+            text-align: center;
+            margin-top: -0.5rem;
+            margin-bottom: 1rem;
+            display: none;
+        }
+    </style>
+</head>
+<body>
+    <div class="login-container">
+        <h2>Login</h2>
+        <div id="error-message" class="error-message">Invalid password. Please try again.</div>
+        <label for="password">Password</label>
+        <input type="password" id="password" placeholder="Enter your password" />
+        <button id="login-button">Login</button>
+    </div>
+
+    <script>
+        // Provided Salt and Hashed Password
+        const saltHex = "2b4a573e3b02738b6ed1d6958462f016";
+        const hashedPasswordHex = "5f148d98c6e3d9d8f2da0ec33e4edc55da463e6fa74dd198e16084bdd54fba59";
+
+        // Convert hex values to Uint8Array
+        const salt = new Uint8Array(saltHex.match(/.{1,2}/g).map(byte => parseInt(byte, 16)));
+        const hashedPassword = new Uint8Array(hashedPasswordHex.match(/.{1,2}/g).map(byte => parseInt(byte, 16)));
+
+        // Function to hash the password with SHA-256
+        async function hashPassword(password, salt) {
+            const encoder = new TextEncoder();
+            const passwordBytes = encoder.encode(password);
+            const passwordSalted = new Uint8Array([...salt, ...passwordBytes]);
+            const hashBuffer = await crypto.subtle.digest("SHA-256", passwordSalted);
+            return new Uint8Array(hashBuffer);
+        }
+
+        // Compare two Uint8Array values
+        function arraysEqual(arr1, arr2) {
+            if (arr1.length !== arr2.length) return false;
+            for (let i = 0; i < arr1.length; i++) {
+                if (arr1[i] !== arr2[i]) return false;
+            }
+            return true;
+        }
+
+        // Login button click handler
+        document.getElementById("login-button").addEventListener("click", async () => {
+            const passwordInput = document.getElementById("password").value;
+            const errorMessage = document.getElementById("error-message");
+
+            // Hash the input password with the provided salt
+            const inputHashedPassword = await hashPassword(passwordInput, salt);
+
+            // Compare input hash with the provided hashed password
+            if (arraysEqual(inputHashedPassword, hashedPassword)) {
+                alert("Login successful!");
+                errorMessage.style.display = "none";
+                // Redirect or perform further actions here
+            } else {
+                errorMessage.style.display = "block";
+            }
+        });
+    </script>
+</body>
+</html>
