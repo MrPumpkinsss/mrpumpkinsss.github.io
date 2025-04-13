@@ -131,26 +131,8 @@ author_profile: False
       const errorMessage = document.getElementById("error-message");
       const inputHashedPassword = await hashPassword(passwordInput, salt);
       if (arraysEqual(inputHashedPassword, hashedPassword)) {
+          alert("Login successful!");
           errorMessage.style.display = "none";
-          // Redirect to the desired URL and open in a new tab
-          const newWindow = window.open("https://mrpumpkinsss.github.io/remote-rpi-vnc", "_blank");
-          console.log("Correct URL jumped");
-          // Ensure the page loads and then inject the password for automatic login
-          newWindow.onload = function () {
-              // Check if the URL starts with the correct base
-              if (newWindow.location.href.startsWith("https://mrpumpkinsss.github.io/remote-rpi-vnc/vnc.html")) {
-                  console.log("Correct URL detected. Attempting to find password field...");
-                  // Inject password and submit
-                  const passwordField = newWindow.document.querySelector("input[type='password']");
-                  if (passwordField) {
-                      passwordField.value = passwordInput; // Set the password
-                      const submitButton = newWindow.document.querySelector("button[type='submit']"); // Adjust if necessary
-                      if (submitButton) {
-                          submitButton.click(); // Simulate form submission
-                      }
-                  }
-              }
-          };
       } else {
           errorMessage.style.display = "block";
       }
