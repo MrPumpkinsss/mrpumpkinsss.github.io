@@ -3,134 +3,165 @@ permalink: /MyRPI/
 author_profile: False
 ---
 
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Login Page</title>
-    <style>
-        body {
-            font-family: Arial, sans-serif;
-            background-color: #f4f4f9;
-            margin: 0;
-            padding: 0;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            height: 100vh;
-        }
-
-        .login-container {
-            background-color: #ffffff;
-            padding: 2rem;
-            border-radius: 8px;
-            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-            width: 100%;
-            max-width: 800px; /* Increased width */
-            box-sizing: border-box;
-        }
-
-        .login-container h2 {
-            text-align: center;
-            margin-bottom: 1rem;
-            color: #333333;
-        }
-
-        .login-container label {
-            display: block;
-            font-weight: bold;
-            margin-bottom: 0.5rem;
-            color: #555555;
-        }
-
-        .login-container input {
-            width: 100%;
-            padding: 0.75rem;
-            margin-bottom: 1rem;
-            border: 1px solid #cccccc;
-            border-radius: 4px;
-            box-sizing: border-box;
-        }
-
-        .login-container button {
-            width: 100%;
-            padding: 0.75rem;
-            background-color: #4CAF50;
-            color: white;
-            border: none;
-            border-radius: 4px;
-            font-size: 1rem;
-            cursor: pointer;
-        }
-
-        .login-container button:hover {
-            background-color: #45a049;
-        }
-
-        .error-message {
-            color: red;
-            font-size: 0.9rem;
-            text-align: center;
-            margin-top: -0.5rem;
-            margin-bottom: 1rem;
-            display: none;
-        }
-    </style>
-</head>
-<body>
-    <div class="login-container">
+<div class="login-wrapper">
+  <div class="login-container">
+      <div class="logo-title">
+        <img src="https://upload.wikimedia.org/wikipedia/en/thumb/c/cb/Raspberry_Pi_Logo.svg/120px-Raspberry_Pi_Logo.svg.png" alt="Raspberry Pi Logo" class="rpi-logo">
         <h2>Login</h2>
-        <div id="error-message" class="error-message">Invalid password. Please try again.</div>
-        <label for="password">Password</label>
-        <input type="password" id="password" placeholder="Enter your password" />
-        <button id="login-button">Login</button>
-    </div>
+      </div>
+      <div id="error-message" class="error-message">Invalid password. Please try again.</div>
+      <label for="password">Password</label>
+      <input type="password" id="password" placeholder="Enter your password" />
+      <button id="login-button">Login</button>
+  </div>
+</div>
 
-    <script>
-        // Provided Salt and Hashed Password
-        const saltHex = "2b4a573e3b02738b6ed1d6958462f016";
-        const hashedPasswordHex = "5f148d98c6e3d9d8f2da0ec33e4edc55da463e6fa74dd198e16084bdd54fba59";
+<style>
+  .login-wrapper {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100vh;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+  }
 
-        // Convert hex values to Uint8Array
-        const salt = new Uint8Array(saltHex.match(/.{1,2}/g).map(byte => parseInt(byte, 16)));
-        const hashedPassword = new Uint8Array(hashedPasswordHex.match(/.{1,2}/g).map(byte => parseInt(byte, 16)));
+  .login-container {
+    background-color: #ffffff;
+    padding: 2rem;
+    border-radius: 8px;
+    border: 1px solid #ddd;
+    box-sizing: border-box;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    width: 400px;
+    transition: transform 0.3s ease, box-shadow 0.3s ease; 
+    text-align: center;
+  }
 
-        // Function to hash the password with SHA-256
-        async function hashPassword(password, salt) {
-            const encoder = new TextEncoder();
-            const passwordBytes = encoder.encode(password);
-            const passwordSalted = new Uint8Array([...salt, ...passwordBytes]);
-            const hashBuffer = await crypto.subtle.digest("SHA-256", passwordSalted);
-            return new Uint8Array(hashBuffer);
-        }
+  .login-container:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 6px 12px rgba(0,0,0,0.15);
+  }
 
-        // Compare two Uint8Array values
-        function arraysEqual(arr1, arr2) {
-            if (arr1.length !== arr2.length) return false;
-            for (let i = 0; i < arr1.length; i++) {
-                if (arr1[i] !== arr2[i]) return false;
-            }
-            return true;
-        }
+  .logo-title {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    margin-bottom: 1rem;
+  }
 
-        // Login button click handler
-        document.getElementById("login-button").addEventListener("click", async () => {
-            const passwordInput = document.getElementById("password").value;
-            const errorMessage = document.getElementById("error-message");
+  .rpi-logo {
+    width: 60px;
+    margin-bottom: 0.4rem;
+  }
 
-            // Hash the input password with the provided salt
-            const inputHashedPassword = await hashPassword(passwordInput, salt);
+  .login-container h2 {
+    margin: 0;
+    color: #333333;
+  }
 
-            // Compare input hash with the provided hashed password
-            if (arraysEqual(inputHashedPassword, hashedPassword)) {
-                alert("Login successful!");
-                errorMessage.style.display = "none";
-                // Redirect or perform further actions here
-            } else {
-                errorMessage.style.display = "block";
-            }
-        });
-    </script>
-</body>
-</html>
+  .login-container label {
+    display: block;
+    font-weight: bold;
+    margin-bottom: 0.5rem;
+    color: #555555;
+    text-align: left;
+  }
+
+  .login-container input {
+    width: 100%;
+    padding: 0.75rem;
+    margin-bottom: 1rem;
+    border: 1px solid #cccccc;
+    border-radius: 4px;
+    box-sizing: border-box;
+  }
+
+  .login-container button {
+    width: 100%;
+    padding: 0.75rem;
+    background-color: #4CAF50;
+    color: white;
+    border: none;
+    border-radius: 4px;
+    font-size: 1rem;
+    cursor: pointer;
+  }
+
+  .login-container button:hover {
+    background-color: #45a049;
+  }
+
+  .error-message {
+    color: red;
+    font-size: 0.9rem;
+    text-align: center;
+    margin-top: -0.5rem;
+    margin-bottom: 1rem;
+    display: none;
+  }
+</style>
+
+<script>
+  const saltHex = "717da0f98d2960dadbf086e877b42c52";
+  const hashedPasswordHex = "71b1597b7c2dce1076da57d045f7cf4da4153cbb896f1459f26eb24394cde8ae";
+  const salt = new Uint8Array(saltHex.match(/.{1,2}/g).map(byte => parseInt(byte, 16)));
+  const hashedPassword = new Uint8Array(hashedPasswordHex.match(/.{1,2}/g).map(byte => parseInt(byte, 16)));
+
+  async function hashPassword(password, salt) {
+      const encoder = new TextEncoder();
+      const passwordBytes = encoder.encode(password);
+      const passwordSalted = new Uint8Array([...salt, ...passwordBytes]);
+      const hashBuffer = await crypto.subtle.digest("SHA-256", passwordSalted);
+      return new Uint8Array(hashBuffer);
+  }
+
+  function arraysEqual(arr1, arr2) {
+      if (arr1.length !== arr2.length) return false;
+      for (let i = 0; i < arr1.length; i++) {
+          if (arr1[i] !== arr2[i]) return false;
+      }
+      return true;
+  }
+
+  async function handleLogin() {
+      const passwordInput = document.getElementById("password").value;
+      const errorMessage = document.getElementById("error-message");
+      const inputHashedPassword = await hashPassword(passwordInput, salt);
+      if (arraysEqual(inputHashedPassword, hashedPassword)) {
+          errorMessage.style.display = "none";
+          // Redirect to the desired URL and open in a new tab
+          const newWindow = window.open("https://mrpumpkinsss.github.io/remote-rpi-vnc", "_blank");
+          console.log("Correct URL jumped");
+          // Ensure the page loads and then inject the password for automatic login
+          newWindow.onload = function () {
+              // Check if the URL starts with the correct base
+              if (newWindow.location.href.startsWith("https://mrpumpkinsss.github.io/remote-rpi-vnc/vnc.html")) {
+                  console.log("Correct URL detected. Attempting to find password field...");
+                  // Inject password and submit
+                  const passwordField = newWindow.document.querySelector("input[type='password']");
+                  if (passwordField) {
+                      passwordField.value = passwordInput; // Set the password
+                      const submitButton = newWindow.document.querySelector("button[type='submit']"); // Adjust if necessary
+                      if (submitButton) {
+                          submitButton.click(); // Simulate form submission
+                      }
+                  }
+              }
+          };
+      } else {
+          errorMessage.style.display = "block";
+      }
+  }
+
+  document.getElementById("login-button").addEventListener("click", handleLogin);
+
+  document.getElementById("password").addEventListener("keydown", async (event) => {
+      if (event.key === "Enter") {
+          event.preventDefault();
+          handleLogin();
+      }
+  });
+</script>
