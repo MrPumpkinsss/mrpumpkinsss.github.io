@@ -105,46 +105,47 @@ author_profile: False
 </style>
 
 <script>
-  const saltHex = "717da0f98d2960dadbf086e877b42c52";
-  const hashedPasswordHex = "71b1597b7c2dce1076da57d045f7cf4da4153cbb896f1459f26eb24394cde8ae";
-  const salt = new Uint8Array(saltHex.match(/.{1,2}/g).map(byte => parseInt(byte, 16)));
-  const hashedPassword = new Uint8Array(hashedPasswordHex.match(/.{1,2}/g).map(byte => parseInt(byte, 16)));
+  document.addEventListener("DOMContentLoaded", () => {
+    const saltHex = "717da0f98d2960dadbf086e877b42c52";
+    const hashedPasswordHex = "71b1597b7c2dce1076da57d045f7cf4da4153cbb896f1459f26eb24394cde8ae";
+    const salt = new Uint8Array(saltHex.match(/.{1,2}/g).map(byte => parseInt(byte, 16)));
+    const hashedPassword = new Uint8Array(hashedPasswordHex.match(/.{1,2}/g).map(byte => parseInt(byte, 16)));
 
-  async function hashPassword(password, salt) {
-      const encoder = new TextEncoder();
-      const passwordBytes = encoder.encode(password);
-      const passwordSalted = new Uint8Array([...salt, ...passwordBytes]);
-      const hashBuffer = await crypto.subtle.digest("SHA-256", passwordSalted);
-      return new Uint8Array(hashBuffer);
-  }
+    async function hashPassword(password, salt) {
+        const encoder = new TextEncoder();
+        const passwordBytes = encoder.encode(password);
+        const passwordSalted = new Uint8Array([...salt, ...passwordBytes]);
+        const hashBuffer = await crypto.subtle.digest("SHA-256", passwordSalted);
+        return new Uint8Array(hashBuffer);
+    }
 
-  function arraysEqual(arr1, arr2) {
-      if (arr1.length !== arr2.length) return false;
-      for (let i = 0; i < arr1.length; i++) {
-          if (arr1[i] !== arr2[i]) return false;
-      }
-      return true;
-  }
+    function arraysEqual(arr1, arr2) {
+        if (arr1.length !== arr2.length) return false;
+        for (let i = 0; i < arr1.length; i++) {
+            if (arr1[i] !== arr2[i]) return false;
+        }
+        return true;
+    }
 
-  async function handleLogin() {
-      const passwordInput = document.getElementById("password").value;
-      const errorMessage = document.getElementById("error-message");
-      const inputHashedPassword = await hashPassword(passwordInput, salt);
-      if (arraysEqual(inputHashedPassword, hashedPassword)) {
-          //alert("Login successful!");
-          errorMessage.style.display = "none";
-          
-      } else {
-          errorMessage.style.display = "block";
-      }
-  }
+    async function handleLogin() {
+        const passwordInput = document.getElementById("password").value;
+        const errorMessage = document.getElementById("error-message");
+        const inputHashedPassword = await hashPassword(passwordInput, salt);
+        if (arraysEqual(inputHashedPassword, hashedPassword)) {
+            errorMessage.style.display = "none";
+            //alert("Login successful!");
+        } else {
+            errorMessage.style.display = "block";
+        }
+    }
 
-  document.getElementById("login-button").addEventListener("click", handleLogin);
+    document.getElementById("login-button").addEventListener("click", handleLogin);
 
-  document.getElementById("password").addEventListener("keydown", async (event) => {
-      if (event.key === "Enter") {
-          event.preventDefault();
-          handleLogin();
-      }
+    document.getElementById("password").addEventListener("keydown", async (event) => {
+        if (event.key === "Enter") {
+            event.preventDefault();
+            handleLogin();
+        }
+    });
   });
 </script>
