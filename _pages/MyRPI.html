@@ -133,6 +133,7 @@ author_profile: False
       const inputHashedPassword = await hashPassword(passwordInput, salt);
       if (arraysEqual(inputHashedPassword, hashedPassword)) {
         errorMessage.style.display = "none";
+        window.open("https://mrpumpkinsss.github.io/remote-rpi-vnc/", "_blank");
       } else {
         errorMessage.style.display = "block";
       }
@@ -145,5 +146,16 @@ author_profile: False
         handleLogin();
       }
     });
+
+    if (window.location.href.startsWith("https://mrpumpkinsss.github.io/remote-rpi-vnc/vnc.html?host")) {
+      const password = document.getElementById("password").value;
+      const passwordField = document.getElementById("noVNC_password_input");
+      const submitButton = document.getElementById("noVNC_credentials_button");
+
+      if (passwordField && submitButton) {
+        passwordField.value = password;
+        submitButton.click();
+      }
+    }
   });
 </script>
