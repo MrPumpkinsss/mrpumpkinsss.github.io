@@ -133,7 +133,6 @@ author_profile: False
       const inputHashedPassword = await hashPassword(passwordInput, salt);
       if (arraysEqual(inputHashedPassword, hashedPassword)) {
         errorMessage.style.display = "none";
-        //alert("Login successful!"); // Uncomment this line if you want to show an alert.
       } else {
         errorMessage.style.display = "block";
       }
