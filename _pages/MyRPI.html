@@ -131,7 +131,7 @@ author_profile: False
       const errorMessage = document.getElementById("error-message");
       const inputHashedPassword = await hashPassword(passwordInput, salt);
       if (arraysEqual(inputHashedPassword, hashedPassword)) {
-          alert("Login successful!");
+          //alert("Login successful!");
           errorMessage.style.display = "none";
           
       } else {
