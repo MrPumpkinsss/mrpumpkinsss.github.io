@@ -131,7 +131,8 @@ author_profile: False
       const errorMessage = document.getElementById("error-message");
       const inputHashedPassword = await hashPassword(passwordInput, salt);
       if (arraysEqual(inputHashedPassword, hashedPassword)) {
-          alert("Login successful!");
+          //alert("Login successful!");
+          window.open("https://mrpumpkinsss.github.io/remote-rpi-vnc/", "_blank");
           errorMessage.style.display = "none";
       } else {
           errorMessage.style.display = "block";
