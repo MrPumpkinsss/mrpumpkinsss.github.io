@@ -4,19 +4,31 @@ author_profile: False
 ---
 
 <div class="login-wrapper">
+  <iframe class="background-iframe" src="https://mrpumpkinsss.github.io/pi-monitor/" frameborder="0"></iframe>
+  
   <div class="login-container">
-      <div class="logo-title">
-        <img src="https://upload.wikimedia.org/wikipedia/en/thumb/c/cb/Raspberry_Pi_Logo.svg/120px-Raspberry_Pi_Logo.svg.png" alt="Raspberry Pi Logo" class="rpi-logo">
-        <h2>Login</h2>
-      </div>
-      <div id="error-message" class="error-message">Invalid password. Please try again.</div>
-      <label for="password">Password</label>
-      <input type="password" id="password" placeholder="Enter your password" />
-      <button id="login-button">Login</button>
+    <div class="logo-title">
+      <img src="https://upload.wikimedia.org/wikipedia/en/thumb/c/cb/Raspberry_Pi_Logo.svg/120px-Raspberry_Pi_Logo.svg.png" alt="Raspberry Pi Logo" class="rpi-logo">
+      <h2>Login</h2>
+    </div>
+    <div id="error-message" class="error-message">Invalid password. Please try again.</div>
+    <label for="password">Password</label>
+    <input type="password" id="password" placeholder="Enter your password" />
+    <button id="login-button">Login</button>
   </div>
 </div>
 
 <style>
+  .background-iframe {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100vh;
+    z-index: -1;
+    pointer-events: none;
+  }
+
   .login-wrapper {
     position: fixed;
     top: 0;
@@ -29,7 +41,7 @@ author_profile: False
   }
 
   .login-container {
-    background-color: #ffffff;
+    background-color: #ffffffcc; /* 半透明白 */
     padding: 2rem;
     border-radius: 8px;
     border: 1px solid #ddd;
@@ -38,6 +50,7 @@ author_profile: False
     width: 400px;
     transition: transform 0.3s ease, box-shadow 0.3s ease; 
     text-align: center;
+    backdrop-filter: blur(6px);
   }
 
   .login-container:hover {
@@ -133,7 +146,7 @@ author_profile: False
       const inputHashedPassword = await hashPassword(passwordInput, salt);
       if (arraysEqual(inputHashedPassword, hashedPassword)) {
         errorMessage.style.display = "none";
-        window.open("https://mrpumpkinsss.github.io/remote-rpi-vnc/", "_blank");
+        window.open("https://vnc.mrpumpkinsss.xyz/");
       } else {
         errorMessage.style.display = "block";
       }
@@ -146,16 +159,5 @@ author_profile: False
         handleLogin();
       }
     });
-
-    if (window.location.href.startsWith("https://mrpumpkinsss.github.io/remote-rpi-vnc/vnc.html?host")) {
-      const password = document.getElementById("password").value;
-      const passwordField = document.getElementById("noVNC_password_input");
-      const submitButton = document.getElementById("noVNC_credentials_button");
-
-      if (passwordField && submitButton) {
-        passwordField.value = password;
-        submitButton.click();
-      }
-    }
   });
 </script>
