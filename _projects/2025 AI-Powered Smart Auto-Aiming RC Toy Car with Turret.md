@@ -57,4 +57,13 @@ The purpose of this project is to participate in the Innovative AI Applications 
     <img src="/images/20250216_190950.jpg" alt=" " style="width: 100%; height: auto;">
     <figcaption>The construction setup</figcaption>
   </figure>
+  <figure style="text-align: center; margin: 0;">
+    <img src="images\QQ20250423-153624.jpg" alt=" " style="width: 100%; height: auto;">
+  </figure>
+  <figure style="text-align: center; margin: 0;">
+    <img src="images\QQ20250423-153549.jpg" alt=" " style="width: 100%; height: auto;">
+  </figure>
+  <figure style="text-align: center; margin: 0;">
+    <img src="images\微信图片_20250423153833.jpg" alt=" " style="width: 100%; height: auto;">
+  </figure>
 </div>
