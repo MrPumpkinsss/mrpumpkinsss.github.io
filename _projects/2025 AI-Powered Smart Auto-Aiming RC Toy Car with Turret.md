@@ -26,41 +26,27 @@ The purpose of this project is to participate in the Innovative AI Applications 
 <div style="display: flex; flex-wrap: wrap; gap: 20px; justify-content: center; margin-top: 20px;">
   <div style="flex: 1 1 300px; max-width: 500px;">
     <video controls style="width:100%;">
-      <source src="images\firing.mp4" type="video/mp4">
+      <source src="/images/firing.mp4" type="video/mp4">
       Your browser does not support the video tag.
     </video>
-    <p style="text-align:center; margin-top:8px;">The turret firing soft foam projectiles.</p>
   </div>
-</div>
-
-<div style="display: flex; flex-wrap: wrap; gap: 20px; justify-content: center; margin-top: 20px;">
   <div style="flex: 1 1 300px; max-width: 500px;">
     <video controls style="width:100%;">
-      <source src="images\driving.mp4" type="video/mp4">
+      <source src="/images/gpt4.mp4" type="video/mp4">
       Your browser does not support the video tag.
     </video>
-    <p style="text-align:center; margin-top:8px;">The vehicle's movement and remote control operation.</p>
-
   </div>
-</div>
-
-<div style="display: flex; flex-wrap: wrap; gap: 20px; justify-content: center; margin-top: 20px;">
   <div style="flex: 1 1 300px; max-width: 500px;">
     <video controls style="width:100%;">
-      <source src="images\gpt4.mp4" type="video/mp4">
+      <source src="/images/driving.mp4" type="video/mp4">
       Your browser does not support the video tag.
     </video>
-    <p style="text-align:center; margin-top:8px;">The GPT-4-powered voice interaction feature.</p>
   </div>
-</div>
-
-<div style="display: flex; flex-wrap: wrap; gap: 20px; justify-content: center; margin-top: 20px;">
   <div style="flex: 1 1 300px; max-width: 500px;">
     <video controls style="width:100%;">
-      <source src="images\tracking.mp4" type="video/mp4">
+      <source src="/images/tracking.mp4" type="video/mp4">
       Your browser does not support the video tag.
     </video>
-    <p style="text-align:center; margin-top:8px;">The AI’s automatic target tracking and following feature.</p>
   </div>
 </div>
 
