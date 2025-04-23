@@ -53,17 +53,17 @@ The purpose of this project is to participate in the Innovative AI Applications 
 ### Images
 
 <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 20px; margin-top: 20px;">
-  <figure style="text-align: center; margin: 0;">
-    <img src="/images/20250216_190950.jpg" alt=" " style="width: 100%; height: auto;">
-    <figcaption>The construction setup</figcaption>
-  </figure>
-  <figure style="text-align: center; margin: 0;">
-    <img src="images\QQ20250423-153624.jpg" alt=" " style="width: 100%; height: auto;">
-  </figure>
-  <figure style="text-align: center; margin: 0;">
-    <img src="images\QQ20250423-153549.jpg" alt=" " style="width: 100%; height: auto;">
-  </figure>
-  <figure style="text-align: center; margin: 0;">
-    <img src="images\微信图片_20250423153833.jpg" alt=" " style="width: 100%; height: auto;">
-  </figure>
+  <!-- Excerpt images and additional gallery images -->
+  <div style="text-align: center;">
+    <img src="/images/20250216_190950.jpg" alt="wx_camera_1706185400509" style="width: 100%; height: auto;">
+  </div>
+  <div style="text-align: center;">
+    <img src="/images/QQ20250423-153624.jpg" alt="Electromagnetic shooter setup" style="width: 100%; height: auto;">
+  </div>
+  <div style="text-align: center;">
+    <img src="/images/QQ20250423-153549.jpg" alt="Dual-stage coil mechanism" style="width: 100%; height: auto;">
+  </div>
+  <div style="text-align: center;">
+    <img src="/images/微信图片_20250423153833.jpg" alt="wx_camera_1706185409795" style="width: 100%; height: auto;">
+  </div>
 </div>
