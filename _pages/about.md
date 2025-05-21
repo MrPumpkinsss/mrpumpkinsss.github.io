@@ -101,6 +101,7 @@ Welcome to my homepage. My name is **Ma Jiawei**. My birthday is August 12, 2004
   <h2>Awards &amp; Honors</h2>
   <ul>
     <li>🥇 <strong>Champion &amp; Design Award</strong> - EIE Microcontroller Application Design Contest (2023-24)</li>
+    <li>🥇 <strong>Champion</strong> - Innovative AI Applications Competition (2024-25)</li>
     <li>🥉 <strong>Third Prize</strong> - 10th HK University Student Innovation Competition</li>
     <li>📜 <strong>Dean's Honours List</strong> - PolyU Faculty of Engineering (2023)</li>
     <li>🏅 <strong>Gold (Global Ranking)</strong> - British Physics Olympiad (BPhO) 2020-2021 Intermediate Physics Challenge</li>
@@ -122,6 +123,6 @@ Welcome to my homepage. My name is **Ma Jiawei**. My birthday is August 12, 2004
   </p>
   <p>
     <strong>Spoken Languages:</strong><br>
-    🇨🇳 Mandarin (Native) &nbsp; 🇬🇧 English (Fluent) &nbsp; 🇭🇰 Cantonese (Conversational)
+    🇨🇳 Mandarin (Native) &nbsp; 🇬🇧 English (Fluent)
   </p>
 </div>
