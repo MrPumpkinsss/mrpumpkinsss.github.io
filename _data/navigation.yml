@@ -17,16 +17,19 @@ main:
   #- title: "Teaching"
   #  url: /teaching/    
     
-  - title: "Projects"
+  - title: "<span class='i18n-zh'>项目</span><span class='i18n-en'>Projects</span>"
     url: /projects/
 
-  - title: "Mini-Projects"
+  - title: "<span class='i18n-zh'>小型项目</span><span class='i18n-en'>Mini-Projects</span>"
     url: /miniprojects/
 
-  - title: "Blog Posts"
+  - title: "<span class='i18n-zh'>博客</span><span class='i18n-en'>Blog Posts</span>"
     url: /blogs/
-    
-  - title: "My RPI"
+
+  - title: "<span class='i18n-zh'>学习笔记</span><span class='i18n-en'>Study Notes</span>"
+    url: /notes/
+
+  - title: "<span class='i18n-zh'>我的树莓派</span><span class='i18n-en'>My RPI</span>"
     url: /MyRPI/
     
   #- title: "CV"

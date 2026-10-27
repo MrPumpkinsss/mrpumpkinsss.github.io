@@ -1,0 +1,139 @@
+---
+layout: archive
+title: "Study Notes"
+permalink: /notes/
+author_profile: true
+---
+
+<style>
+  .note-grid {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 16px;
+    margin: 20px auto;
+    max-width: 800px;
+  }
+  .note-card {
+    flex: 1 1 300px;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    padding: 18px 20px;
+    background: #fff;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+  }
+  .note-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 6px 12px rgba(0,0,0,0.15);
+  }
+  .note-card h3 {
+    margin: 0 0 8px;
+    font-size: 1.4rem;
+  }
+  .note-card a {
+    text-decoration: none;
+    color: #007acc;
+  }
+  .note-table-wrap {
+    max-width: 800px;
+    margin: 20px auto;
+    overflow-x: auto;
+  }
+  .note-table {
+    width: 100%;
+    border-collapse: collapse;
+    background: #fff;
+  }
+  .note-table th, .note-table td {
+    border: 1px solid #ddd;
+    padding: 10px 12px;
+    text-align: left;
+    vertical-align: top;
+  }
+  .note-table th {
+    background: #f5f5f5;
+  }
+</style>
+
+<p>
+  <span class="i18n-zh">这里放我围绕研究方向的<strong>学习笔记</strong>：读论文、读源码、做实验的沉淀，持续更新中。目前从两个主流开源推理引擎 <strong>vLLM</strong> 和 <strong>SGLang</strong> 开始。</span>
+  <span class="i18n-en">Study notes around my research: what I learn from papers, source code, and experiments. Continuously updated. Currently starting with the two mainstream open-source inference engines, <strong>vLLM</strong> and <strong>SGLang</strong>.</span>
+</p>
+
+<div class="note-grid">
+  <div class="note-card">
+    <h3><a href="/notes/vllm/">vLLM</a></h3>
+    <p>
+      <span class="i18n-zh">围绕 PagedAttention 的高吞吐推理引擎：分页 KV cache、连续批处理、前缀缓存、投机解码与 V1 引擎架构。</span>
+      <span class="i18n-en">A high-throughput serving engine built around PagedAttention: paged KV cache, continuous batching, prefix caching, speculative decoding, and the V1 engine architecture.</span>
+    </p>
+    <p><a href="/notes/vllm/"><span class="i18n-zh">阅读笔记 →</span><span class="i18n-en">Read notes →</span></a></p>
+  </div>
+  <div class="note-card">
+    <h3><a href="/notes/sglang/">SGLang</a></h3>
+    <p>
+      <span class="i18n-zh">以 RadixAttention 前缀复用和低调度开销著称的引擎：基数树 KV cache、overlap scheduler、结构化输出与 EAGLE 投机解码。</span>
+      <span class="i18n-en">The engine known for RadixAttention prefix reuse and low scheduling overhead: radix-tree KV cache, overlap scheduler, structured outputs, and EAGLE speculative decoding.</span>
+    </p>
+    <p><a href="/notes/sglang/"><span class="i18n-zh">阅读笔记 →</span><span class="i18n-en">Read notes →</span></a></p>
+  </div>
+</div>
+
+<h2>
+  <span class="i18n-zh">对比速览</span>
+  <span class="i18n-en">Quick Comparison</span>
+</h2>
+
+<div class="note-table-wrap">
+<table class="note-table">
+  <thead>
+    <tr>
+      <th><span class="i18n-zh">维度</span><span class="i18n-en">Dimension</span></th>
+      <th>vLLM</th>
+      <th>SGLang</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td><span class="i18n-zh">定位</span><span class="i18n-en">Positioning</span></td>
+      <td><span class="i18n-zh">吞吐导向，生态最广、模型覆盖最全</span><span class="i18n-en">Throughput-oriented; the broadest ecosystem and model coverage</span></td>
+      <td><span class="i18n-zh">前缀复用与低调度开销见长</span><span class="i18n-en">Strong at prefix reuse and low scheduling overhead</span></td>
+    </tr>
+    <tr>
+      <td><span class="i18n-zh">标志技术</span><span class="i18n-en">Signature technique</span></td>
+      <td>PagedAttention <span class="i18n-zh">（分页 KV cache）</span><span class="i18n-en">(paged KV cache)</span></td>
+      <td>RadixAttention <span class="i18n-zh">（基数树 KV 复用）</span><span class="i18n-en">(radix-tree KV reuse)</span></td>
+    </tr>
+    <tr>
+      <td><span class="i18n-zh">KV 缓存复用</span><span class="i18n-en">KV cache reuse</span></td>
+      <td><span class="i18n-zh">block 化 + 内容哈希前缀匹配（APC）</span><span class="i18n-en">Blocks + content-hash prefix matching (APC)</span></td>
+      <td><span class="i18n-zh">基数树，任意长度公共前缀复用</span><span class="i18n-en">Radix tree; arbitrary-length common prefixes</span></td>
+    </tr>
+    <tr>
+      <td><span class="i18n-zh">调度</span><span class="i18n-en">Scheduling</span></td>
+      <td><span class="i18n-zh">连续批处理（V1 引擎异步化调度）</span><span class="i18n-en">Continuous batching (async V1 engine)</span></td>
+      <td><span class="i18n-zh">overlap scheduler：CPU 调度与 GPU 计算重叠</span><span class="i18n-en">Overlap scheduler: CPU scheduling overlapped with GPU compute</span></td>
+    </tr>
+    <tr>
+      <td><span class="i18n-zh">投机解码</span><span class="i18n-en">Speculative decoding</span></td>
+      <td>ngram / draft model / Medusa / EAGLE</td>
+      <td>EAGLE <span class="i18n-zh">系列</span><span class="i18n-en">family</span> / ngram</td>
+    </tr>
+    <tr>
+      <td><span class="i18n-zh">结构化输出</span><span class="i18n-en">Structured output</span></td>
+      <td><span class="i18n-zh">约束解码（xgrammar 等后端）</span><span class="i18n-en">Constrained decoding (xgrammar and other backends)</span></td>
+      <td><span class="i18n-zh">原生集成 xgrammar 等后端</span><span class="i18n-en">First-party xgrammar and other backends</span></td>
+    </tr>
+    <tr>
+      <td><span class="i18n-zh">服务接口</span><span class="i18n-en">Serving API</span></td>
+      <td>OpenAI-compatible</td>
+      <td>OpenAI-compatible</td>
+    </tr>
+  </tbody>
+</table>
+</div>
+
+<p>
+  <span class="i18n-zh">⏳ 两个引擎迭代都非常快，以上内容是 2026-10 的快照，具体行为以官方文档为准。</span>
+  <span class="i18n-en">⏳ Both engines evolve fast; the above is an October 2026 snapshot — always defer to the official docs.</span>
+</p>

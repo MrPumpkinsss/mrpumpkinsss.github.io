@@ -100,7 +100,7 @@ author_profile: true
 {% assign sorted_projects = site.projects | sort: 'title' | reverse %}
 
 <nav class="toc">
-  <h2>Project Directory</h2>
+  <h2><span class="i18n-zh">项目目录</span><span class="i18n-en">Project Directory</span></h2>
   <ul>
     {% for post in sorted_projects %}
       <li><a href="#project-{{ post.title | slugify }}">{{ post.title }}</a></li>
