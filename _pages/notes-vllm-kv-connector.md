@@ -39,6 +39,8 @@ author_profile: true
   .tldr ul { margin: 6px 0 2px; padding-left: 20px; }
   .tldr li { margin-bottom: 5px; }
   html[data-theme="dark"] .tldr { background: #41321b; border-left-color: #d9a04b; }
+  .why { border-left: 4px solid #7a97d4; background: #f4f7fd; padding: 10px 16px; border-radius: 0 8px 8px 0; margin: 14px auto; max-width: 800px; }
+  html[data-theme="dark"] .why { background: #232b3e; border-left-color: #6f8cc9; }
 .diagram-fig { background:#fff; border:1px solid #ddd; border-radius:8px; padding:12px; margin:10px auto; max-width:860px; }
 .diagram-fig img { width:100%; height:auto; display:block; }
 html[data-theme="dark"] .diagram-fig { border-color:#444; }
@@ -47,6 +49,11 @@ html[data-theme="dark"] .diagram-fig { border-color:#444; }
 <p>
   <a href="/notes/"><span class="i18n-zh">← 返回学习目录</span><span class="i18n-en">← Back to Study Catalog</span></a>
 </p>
+
+<div class="why">
+  <p style="margin:4px 0;"><strong><span class="i18n-zh">解决什么问题：</span><span class="i18n-en">What problem it solves:</span></strong> <span class="i18n-zh">集群常常想让 KV cache（注意力已经算好的上下文缓存）在实例之间搬家或复用——比如 prefill 与 decode 分机部署（PD 分离）、显存吃紧时卸载到 CPU 或远端——但 vLLM 内核本身并不知道这些外部 KV 的存在。</span><span class="i18n-en">Clusters often need to move or reuse the KV cache (the cached attention context) across instances — prefill/decode separation, offloading to CPU or remote storage — but vLLM's core knows nothing about such external KV.</span></p>
+  <p style="margin:4px 0;"><strong><span class="i18n-zh">目的是什么：</span><span class="i18n-en">What it is for:</span></strong> <span class="i18n-zh">在调度与执行的固定位置开一组统一钩子，把「KV 什么时候传、怎么传」做成插件，让 PD 分离、KV 卸载、跨实例前缀共享变成换个配置，而不是改内核代码。</span><span class="i18n-en">A unified set of hooks at fixed scheduling/execution points makes KV transfer pluggable, so P/D separation, offloading and cross-instance prefix reuse become configuration, not kernel patches.</span></p>
+</div>
 
 <div class="tldr">
   <strong><span class="i18n-zh">先记住三件事</span><span class="i18n-en">TL;DR</span></strong>

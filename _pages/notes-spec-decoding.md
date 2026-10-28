@@ -42,6 +42,8 @@ author_profile: true
   .tldr ul { margin: 6px 0 2px; padding-left: 20px; }
   .tldr li { margin-bottom: 5px; }
   html[data-theme="dark"] .tldr { background: #41321b; border-left-color: #d9a04b; }
+  .why { border-left: 4px solid #7a97d4; background: #f4f7fd; padding: 10px 16px; border-radius: 0 8px 8px 0; margin: 14px auto; max-width: 800px; }
+  html[data-theme="dark"] .why { background: #232b3e; border-left-color: #6f8cc9; }
 .diagram-fig { background:#fff; border:1px solid #ddd; border-radius:8px; padding:12px; margin:10px auto; max-width:860px; }
 .diagram-fig img { width:100%; height:auto; display:block; }
 html[data-theme="dark"] .diagram-fig { border-color:#444; }
@@ -50,6 +52,11 @@ html[data-theme="dark"] .diagram-fig { border-color:#444; }
 <p>
   <a href="/notes/"><span class="i18n-zh">← 返回学习目录</span><span class="i18n-en">← Back to Study Catalog</span></a>
 </p>
+
+<div class="why">
+  <p style="margin:4px 0;"><strong><span class="i18n-zh">解决什么问题：</span><span class="i18n-en">What problem it solves:</span></strong> <span class="i18n-zh">自回归解码一次前向只产出 1 个 token，GPU 的算力和显存带宽大量耗在小矩阵乘上，速度被「步数 × 每步时延」锁死。</span><span class="i18n-en">Autoregressive decoding emits one token per forward pass: compute and memory bandwidth are wasted on tiny matrix multiplies, and speed is locked to steps × per-step latency.</span></p>
+  <p style="margin:4px 0;"><strong><span class="i18n-zh">目的是什么：</span><span class="i18n-en">What it is for:</span></strong> <span class="i18n-zh">让便宜的草稿者先猜一串 token、大模型一次前向并行验证多个——在数学上严格不改变输出分布的前提下，一步产出多个 token。</span><span class="i18n-en">A cheap drafter proposes a run of tokens and the target model verifies them all in one forward pass — emitting several tokens per step while provably preserving the output distribution.</span></p>
+</div>
 
 <div class="tldr">
   <strong><span class="i18n-zh">先记住四件事</span><span class="i18n-en">TL;DR</span></strong>

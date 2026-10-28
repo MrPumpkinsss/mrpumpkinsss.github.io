@@ -37,6 +37,8 @@ author_profile: true
 .diagram-fig { background:#fff; border:1px solid #ddd; border-radius:8px; padding:12px; margin:10px auto; max-width:860px; }
 .diagram-fig img { width:100%; height:auto; display:block; }
 html[data-theme="dark"] .diagram-fig { border-color:#444; }
+.wk-why { font-size:0.9rem; color:#555; border-left:3px solid #7a97d4; padding:2px 0 2px 10px; margin:8px 0 10px; }
+html[data-theme="dark"] .wk-why { color:#aaa; border-left-color:#6f8cc9; }
 </style>
 
 <p>
@@ -70,6 +72,10 @@ html[data-theme="dark"] .diagram-fig { border-color:#444; }
 
 <h3 id="av-triton">1 · 自适应验证的「草稿预算选择」内核化 · <a href="https://github.com/vllm-project/vllm/pull/63421">#63421</a></h3>
 
+<p class="wk-why">
+  <span class="i18n-zh"><strong>解决什么问题：</strong>投机解码每步「草稿多少个」的选择逻辑会在 serving 中途现场编译，卡住进程还拖慢每步调度。<strong>目的是什么：</strong>把这段选择逻辑变成 warmup 时一次性编译的 Triton 内核——运行时不再编译，每步 host 开销大降。</span>
+</p>
+
 <p>
   <span class="i18n-zh"><strong>自适应验证（Adaptive Verification, AV）</strong>是投机解码里每步<strong>动态决定草稿多少个 token</strong>的机制：预算 k′ 随上一步的接受情况变化，而不是固定草稿深度。问题在于预算选择原来用 <code>torch.compile(dynamic=True)</code> 实现——serving 中途会现场编译 4–5 个 Dynamo 图（每进程卡 1.8–4.7 秒），且每个预算绑定步的 host 开销高达 76–90µs。本 PR 把预算选择换成<strong>单次启动的 Triton 内核</strong>（Triton＝用 Python 写 GPU kernel 的编译工具），warmup（预热）时一次性 JIT（即时编译）：serving 中不再有编译，host 开销 ~15µs（约 6×），GPU 端 85–100µs → 22–30µs。实测 Qwen3-4B + DSpark（一种草稿模型方案）、GSM8K 数据集、并发 16（H200）：4,783 → 6,803 tok/s（每秒生成 token 数；+42%），精度不变。</span>
 </p>
@@ -79,6 +85,10 @@ html[data-theme="dark"] .diagram-fig { border-color:#444; }
 </div>
 
 <h3 id="sharded-draft-logits">2 · 批分片采样下，draft logits 缓存也跟着分片 · <a href="https://github.com/vllm-project/vllm/pull/63554">#63554</a></h3>
+
+<p class="wk-why">
+  <span class="i18n-zh"><strong>解决什么问题：</strong>批分片采样下每个 rank 只服务 1/TP 的请求，draft logits 缓存却仍按全量行数分配，显存大头被白占。<strong>目的是什么：</strong>让各 rank 只为自己拥有的请求分配 draft logits，把省下的显存还给 KV cache。</span>
+</p>
 
 <p>
   <span class="i18n-zh">vLLM 正在推进<strong>批分片采样（batch-sharded sampling）</strong>：目标模型的 logits 沿请求维分片到各 TP rank，请求按 <code>req_state_idx % tp_size</code> 归属，每个 rank 只对<strong>自己拥有的请求</strong>做采样与投机验证。但草稿模型的 logits 缓存此前仍按全量 <code>max_num_seqs</code> 行在每个 rank 上分配——批分片下每 rank 实际只用到 1/TP，其余全是白占的显存。本 PR 让每个 rank 只为自己要验证的请求分配 draft logits：行数 <code>max_num_seqs → ⌈max_num_seqs/tp⌉</code>，起草仍全量复制（保证 rank 间一致），读写统一走 <code>shard_owner / shard_row</code> 两个 Triton helper（单 TP 时编译退化回原行为）；省出的显存直接还给 KV cache。</span>
@@ -90,6 +100,10 @@ html[data-theme="dark"] .diagram-fig { border-color:#444; }
 
 <h3 id="kv-balanced-mla">3 · Kimi-K3「按请求长度均衡」的 FP8 MLA decode · <a href="https://github.com/vllm-project/vllm/pull/63638">#63638</a></h3>
 
+<p class="wk-why">
+  <span class="i18n-zh"><strong>解决什么问题：</strong>agent 负载同批请求的上下文长短悬殊，decode attention 负载失衡，整批被最长的请求拖住。<strong>目的是什么：</strong>按每个请求自身的长度比例切分它的 KV，让各 GPU 的 decode 工作量重新均衡。</span>
+</p>
+
 <p>
   <span class="i18n-zh">Agent 类负载的特点是<strong>同一批里请求的上下文长度差异极大</strong>（有的刚开头、有的已经滚了几万 token），decode attention 的负载随之失衡，整批被最长的请求拖住。新后端 <code>--attention-backend KIMI_K3_KV_BALANCED_MLA</code>（Blackwell，opt-in）按<strong>每个请求自身的长度比例</strong>切分它的 KV，让各 GPU 的 decode 工作量重新均衡。实测（GB300，AgentX 长度分布）：decode attention 相对 TOKENSPEED_MLA（min_split_kv=8）1.34–1.59×、相对其默认配置 1.91–2.67×；端到端 DEP16 decode（3P1D）：+7.8% TPS/GPU、p90 交互时延改善 20%。</span>
 </p>
@@ -99,6 +113,10 @@ html[data-theme="dark"] .diagram-fig { border-color:#444; }
 </div>
 
 <h3 id="fast-start-cache-key">4 · Fast Start：权重缓存 key 补上「内核后端」维度 · <a href="https://github.com/vllm-project/vllm/pull/63506">#63506</a></h3>
+
+<p class="wk-why">
+  <span class="i18n-zh"><strong>解决什么问题：</strong>权重缓存的 key 没记录内核后端，不同后端的 engine 可能错拿布局不对的预处理权重——输出全错还不报错。<strong>目的是什么：</strong>把后端维度补进缓存 key，不匹配就回退磁盘加载，保证拿到的权重一定是自己后端的布局。</span>
+</p>
 
 <p>
   <span class="i18n-zh"><strong>Fast Start</strong>（路线图 <a href="https://github.com/vllm-project/vllm/pull/56049">#56049</a>）的思路：由常驻守护进程（daemon）把权重<strong>预处理一次</strong>（<code>process_weights_after_loading</code>：量化、shuffle、repack 成所选内核后端的布局），后续 engine 启动直接走 IPC 共享内存映射，跳过加载与预处理。坑在于：<code>WeightCacheKey</code> 里没有 <code>--moe-backend / --linear-backend</code>——daemon 用 CUTLASS 布局处理好的权重，可能被一个解析成 TRT-LLM 后端的 engine 映射走，<code>/health</code> 照样 200，但<strong>每个输出都是错的</strong>。本 PR 把 <code>moe_backend、linear_backend、linear_backend_per_quant</code> 加进 key（取「配置值」而非「解析值」，保守策略），后端不匹配时先报 key miss，再按默认 <code>fallback=true</code> 回退磁盘加载。</span>

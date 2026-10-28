@@ -9,6 +9,16 @@ author_profile: true
   <a href="/notes/"><span class="i18n-zh">← 返回学习笔记</span><span class="i18n-en">← Back to Study Notes</span></a>
 </p>
 
+<style>
+  .why { border-left: 4px solid #7a97d4; background: #f4f7fd; padding: 10px 16px; border-radius: 0 8px 8px 0; margin: 14px auto; max-width: 800px; }
+  html[data-theme="dark"] .why { background: #232b3e; border-left-color: #6f8cc9; }
+</style>
+
+<div class="why">
+  <p style="margin:4px 0;"><strong><span class="i18n-zh">解决什么问题：</span><span class="i18n-en">What problem it solves:</span></strong> <span class="i18n-zh">前缀共享密集的负载（多轮对话、agent、few-shot、结构化输出）里，公共前缀被反复重算，decode 阶段 CPU 调度开销又吃掉本就不满的 GPU 吞吐。</span><span class="i18n-en">In prefix-heavy workloads (multi-turn chat, agents, few-shot, structured output) shared prefixes get recomputed again and again, and CPU scheduling overhead eats decode throughput.</span></p>
+  <p style="margin:4px 0;"><strong><span class="i18n-zh">目的是什么：</span><span class="i18n-en">What it is for:</span></strong> <span class="i18n-zh">用 RadixAttention（基数树管理 KV cache）复用任意长度的公共前缀，用 overlap scheduler 把 CPU 调度藏进 GPU 计算里，把这类负载的吞吐提上去。</span><span class="i18n-en">Reuse arbitrary-length shared prefixes with RadixAttention (a radix tree over the KV cache) and hide scheduling behind GPU compute with the overlap scheduler.</span></p>
+</div>
+
 <div class="i18n-en">
   <p><em>English quick summary: SGLang is an LLM serving engine from the UC Berkeley LMSYS community, known for RadixAttention — a radix-tree KV cache that reuses arbitrary-length shared prefixes — plus an overlap scheduler that hides CPU scheduling behind GPU compute, first-party structured outputs, and EAGLE-family speculative decoding. The notes cover core mechanisms, architecture, common launch parameters, and a learning path. (Written in Chinese; headings are bilingual.)</em></p>
 </div>

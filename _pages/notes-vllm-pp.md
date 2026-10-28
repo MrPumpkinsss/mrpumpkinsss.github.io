@@ -39,6 +39,8 @@ author_profile: true
   .tldr ul { margin: 6px 0 2px; padding-left: 20px; }
   .tldr li { margin-bottom: 5px; }
   html[data-theme="dark"] .tldr { background: #41321b; border-left-color: #d9a04b; }
+  .why { border-left: 4px solid #7a97d4; background: #f4f7fd; padding: 10px 16px; border-radius: 0 8px 8px 0; margin: 14px auto; max-width: 800px; }
+  html[data-theme="dark"] .why { background: #232b3e; border-left-color: #6f8cc9; }
 .diagram-fig { background:#fff; border:1px solid #ddd; border-radius:8px; padding:12px; margin:10px auto; max-width:860px; }
 .diagram-fig img { width:100%; height:auto; display:block; }
 html[data-theme="dark"] .diagram-fig { border-color:#444; }
@@ -47,6 +49,11 @@ html[data-theme="dark"] .diagram-fig { border-color:#444; }
 <p>
   <a href="/notes/"><span class="i18n-zh">← 返回学习目录</span><span class="i18n-en">← Back to Study Catalog</span></a>
 </p>
+
+<div class="why">
+  <p style="margin:4px 0;"><strong><span class="i18n-zh">解决什么问题：</span><span class="i18n-en">What problem it solves:</span></strong> <span class="i18n-zh">模型大到一张卡（一组卡）放不下；而朴素的流水线分段轮流干活，同一时刻只有一个 stage 在算、其余在干等，吞吐上不去。</span><span class="i18n-en">The model can be too big for one GPU (or one GPU group), and a naive pipeline leaves all stages idle but one at any moment.</span></p>
+  <p style="margin:4px 0;"><strong><span class="i18n-zh">目的是什么：</span><span class="i18n-en">What it is for:</span></strong> <span class="i18n-zh">把模型按层切成几段接力，同时让多个调度步在流水线里错位前进，保证每一段任何时刻都有活干，把每一张卡都填满。</span><span class="i18n-en">Split the model by layers into stages and keep several scheduler steps in flight at once, so every stage always has work and every GPU stays busy.</span></p>
+</div>
 
 <div class="tldr">
   <strong><span class="i18n-zh">先记住三件事</span><span class="i18n-en">TL;DR</span></strong>

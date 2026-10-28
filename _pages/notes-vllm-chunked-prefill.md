@@ -22,6 +22,8 @@ author_profile: true
   .tldr ul { margin: 6px 0 2px; padding-left: 20px; }
   .tldr li { margin-bottom: 5px; }
   html[data-theme="dark"] .tldr { background: #41321b; border-left-color: #d9a04b; }
+  .why { border-left: 4px solid #7a97d4; background: #f4f7fd; padding: 10px 16px; border-radius: 0 8px 8px 0; margin: 14px auto; max-width: 800px; }
+  html[data-theme="dark"] .why { background: #232b3e; border-left-color: #6f8cc9; }
   .diagram-fig { background:#fff; border:1px solid #ddd; border-radius:8px; padding:12px; margin:10px auto; max-width:860px; }
   .diagram-fig img { width:100%; height:auto; display:block; }
   html[data-theme="dark"] .diagram-fig { border-color:#444; }
@@ -30,6 +32,11 @@ author_profile: true
 <p>
   <a href="/notes/"><span class="i18n-zh">← 返回学习目录</span><span class="i18n-en">← Back to Study Catalog</span></a>
 </p>
+
+<div class="why">
+  <p style="margin:4px 0;"><strong><span class="i18n-zh">解决什么问题：</span><span class="i18n-en">What problem it solves:</span></strong> <span class="i18n-zh">一个长 prompt 的预填充会一步吃光整个 token 预算，同批所有 decode 请求只能干等，token 间隔（ITL）飙出长尾。</span><span class="i18n-en">A long prompt's prefill can swallow a whole step's token budget, leaving every co-batched decode request stalled and spiking inter-token latency (ITL).</span></p>
+  <p style="margin:4px 0;"><strong><span class="i18n-zh">目的是什么：</span><span class="i18n-en">What it is for:</span></strong> <span class="i18n-zh">把长 prompt 按预算切成小块，每步只算一块、并与 decode 混在一批里算，用少量首 token 延迟（TTFT）的代价换 decode 平稳、排队公平和更高的整体吞吐。</span><span class="i18n-en">Slice long prompts into budget-sized chunks that share each step with decode, trading a little time-to-first-token (TTFT) for smooth decode, fair queuing and higher throughput.</span></p>
+</div>
 
 <div class="tldr">
   <strong><span class="i18n-zh">先记住四件事</span><span class="i18n-en">TL;DR</span></strong>
