@@ -1,0 +1,30 @@
+<mxfile host="app.diagrams.net">
+  <diagram name="d" id="d">
+    <mxGraphModel dx="1000" dy="600" grid="0" page="1" pageWidth="860" pageHeight="240" math="0" shadow="0">
+      <root>
+        <mxCell id="0"/><mxCell id="1" parent="0"/>
+    <mxCell id="c2" value="猜「北京」&lt;br&gt;q₁=0.9" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#eef3fd;strokeColor=#7a97d4;fontColor=#333333;align=center;verticalAlign=middle;fontSize=12;" vertex="1" parent="1"><mxGeometry x="30" y="38" width="120" height="46" as="geometry"/></mxCell>
+    <mxCell id="c3" value="猜「的」&lt;br&gt;q₂=0.9" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#eef3fd;strokeColor=#7a97d4;fontColor=#333333;align=center;verticalAlign=middle;fontSize=12;" vertex="1" parent="1"><mxGeometry x="178" y="38" width="120" height="46" as="geometry"/></mxCell>
+    <mxCell id="c4" value="猜「冬天」&lt;br&gt;q₃=0.6" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#eef3fd;strokeColor=#7a97d4;fontColor=#333333;align=center;verticalAlign=middle;fontSize=12;" vertex="1" parent="1"><mxGeometry x="326" y="38" width="120" height="46" as="geometry"/></mxCell>
+    <mxCell id="c5" value="目标模型一次前向&lt;br&gt;验证 k+1…k 个位置" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff3e0;strokeColor=#e0a04a;fontColor=#333333;align=center;verticalAlign=middle;fontSize=12;" vertex="1" parent="1"><mxGeometry x="474" y="38" width="150" height="46" as="geometry"/></mxCell>
+    <mxCell id="c6" value="北京" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#c9e7d2;strokeColor=#59a97c;fontColor=#333333;align=center;verticalAlign=middle;fontSize=13;" vertex="1" parent="1"><mxGeometry x="660" y="38" width="56" height="40" as="geometry"/></mxCell>
+    <mxCell id="c7" value="的" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#c9e7d2;strokeColor=#59a97c;fontColor=#333333;align=center;verticalAlign=middle;fontSize=13;" vertex="1" parent="1"><mxGeometry x="720" y="38" width="56" height="40" as="geometry"/></mxCell>
+    <mxCell id="c8" value="冬✗" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f6d3d3;strokeColor=#d98a8a;fontColor=#333333;align=center;verticalAlign=middle;fontSize=13;" vertex="1" parent="1"><mxGeometry x="780" y="38" width="56" height="40" as="geometry"/></mxCell>
+    <mxCell id="c9" value="拒绝位重采 →「春」" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#e9f6ee;strokeColor=#59a97c;fontColor=#333333;align=center;verticalAlign=middle;fontSize=12;" vertex="1" parent="1"><mxGeometry x="660" y="86" width="176" height="40" as="geometry"/></mxCell>
+    <mxCell id="c10" value="位置1&lt;br&gt;✓ 0.92≥q" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#eef3fd;strokeColor=#7a97d4;fontColor=#333333;align=center;verticalAlign=middle;fontSize=12;" vertex="1" parent="1"><mxGeometry x="140" y="150" width="100" height="44" as="geometry"/></mxCell>
+    <mxCell id="c11" value="位置2&lt;br&gt;✓ 0.78 抽中" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#eef3fd;strokeColor=#7a97d4;fontColor=#333333;align=center;verticalAlign=middle;fontSize=12;" vertex="1" parent="1"><mxGeometry x="250" y="150" width="100" height="44" as="geometry"/></mxCell>
+    <mxCell id="c12" value="位置3&lt;br&gt;✗ 0.083 拒绝" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fdeaea;strokeColor=#d98a8a;fontColor=#333333;align=center;verticalAlign=middle;fontSize=12;" vertex="1" parent="1"><mxGeometry x="360" y="150" width="100" height="44" as="geometry"/></mxCell>
+    <mxCell id="c13" value="norm(p−q)+ 重采&lt;br&gt;后段草稿全部丢弃" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f2f2f4;strokeColor=#b9bcc4;fontColor=#333333;align=center;verticalAlign=middle;fontSize=12;" vertex="1" parent="1"><mxGeometry x="470" y="150" width="120" height="44" as="geometry"/></mxCell>
+    <mxCell id="c14" value="「春」&lt;br&gt;本步净产出 +3" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#e9f6ee;strokeColor=#59a97c;fontColor=#333333;align=center;verticalAlign=middle;fontSize=12;" vertex="1" parent="1"><mxGeometry x="618" y="150" width="120" height="44" as="geometry"/></mxCell>
+    <mxCell id="c15" value="草稿（串行 k 次，小模型）" style="text;html=1;align=left;verticalAlign=middle;fontColor=#333333;fontSize=13;" vertex="1" parent="1"><mxGeometry x="28" y="13" width="181" height="20.8" as="geometry"/></mxCell>
+    <mxCell id="c16" value="验证结果（token 级）" style="text;html=1;align=left;verticalAlign=middle;fontColor=#333333;fontSize=13;" vertex="1" parent="1"><mxGeometry x="658" y="13" width="149" height="20.8" as="geometry"/></mxCell>
+    <mxCell id="c17" value="目标模型验证：" style="text;html=1;align=left;verticalAlign=middle;fontColor=#333333;fontSize=13;" vertex="1" parent="1"><mxGeometry x="28" y="117" width="105" height="20.8" as="geometry"/></mxCell>
+    <mxCell id="c18" value="关键：目标模型对整个「前缀+3 草稿」只做一次前向；4 个位置的概率并行产出，验证不花额外的目标前向。" style="text;html=1;align=left;verticalAlign=middle;fontColor=#666666;fontSize=12;" vertex="1" parent="1"><mxGeometry x="28" y="214" width="623" height="19.2" as="geometry"/></mxCell>
+    <mxCell id="c19" style="html=1;endArrow=block;endFill=1;strokeColor=#7a879d;strokeWidth=1.4;rounded=0;" edge="1" parent="1"><mxGeometry relative="1" as="geometry"><mxPoint x="150" y="61" as="sourcePoint"/><mxPoint x="176" y="61" as="targetPoint"/></mxGeometry></mxCell>
+    <mxCell id="c20" style="html=1;endArrow=block;endFill=1;strokeColor=#7a879d;strokeWidth=1.4;rounded=0;" edge="1" parent="1"><mxGeometry relative="1" as="geometry"><mxPoint x="298" y="61" as="sourcePoint"/><mxPoint x="324" y="61" as="targetPoint"/></mxGeometry></mxCell>
+    <mxCell id="c21" style="html=1;endArrow=block;endFill=1;strokeColor=#7a879d;strokeWidth=1.4;rounded=0;" edge="1" parent="1"><mxGeometry relative="1" as="geometry"><mxPoint x="446" y="61" as="sourcePoint"/><mxPoint x="472" y="61" as="targetPoint"/></mxGeometry></mxCell>
+    <mxCell id="c22" style="html=1;endArrow=block;endFill=1;strokeColor=#7a879d;strokeWidth=1.4;rounded=0;" edge="1" parent="1"><mxGeometry relative="1" as="geometry"><mxPoint x="590" y="172" as="sourcePoint"/><mxPoint x="616" y="172" as="targetPoint"/></mxGeometry></mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>

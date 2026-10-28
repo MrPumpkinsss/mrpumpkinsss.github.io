@@ -39,6 +39,9 @@ author_profile: true
   .tldr ul { margin: 6px 0 2px; padding-left: 20px; }
   .tldr li { margin-bottom: 5px; }
   html[data-theme="dark"] .tldr { background: #41321b; border-left-color: #d9a04b; }
+.diagram-fig { background:#fff; border:1px solid #ddd; border-radius:8px; padding:12px; margin:10px auto; max-width:860px; }
+.diagram-fig img { width:100%; height:auto; display:block; }
+html[data-theme="dark"] .diagram-fig { border-color:#444; }
 </style>
 
 <p>
@@ -140,46 +143,9 @@ author_profile: true
   <span class="i18n-zh">一句话总结：<strong>调度器决定「搬什么、什么时候搬」，worker 决定「怎么搬」，两侧之间只传轻量元数据。</strong></span>
 </p>
 
-<svg class="dg" viewBox="0 0 860 330" role="img" aria-label="KV Connector 双角色 hook 时序图">
-  <defs>
-    <marker id="karr" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
-      <path d="M0,0L10,5L0,10z" class="arrp"/>
-    </marker>
-  </defs>
-  <text x="200" y="24" text-anchor="middle" font-size="13">调度器副本（签单）</text>
-  <text x="620" y="24" text-anchor="middle" font-size="13">Worker 副本（搬货，每 TP rank）</text>
-  <line x1="200" y1="32" x2="200" y2="316" class="ln" stroke-dasharray="4 4"/>
-  <line x1="620" y1="32" x2="620" y2="316" class="ln" stroke-dasharray="4 4"/>
-  <rect x="30" y="44" width="340" height="46" rx="8" class="b"/>
-  <text x="200" y="63" text-anchor="middle" font-size="12">① get_num_new_matched_tokens：命中多少 token？</text>
-  <text x="200" y="81" text-anchor="middle" font-size="11" class="ts">返回 None 表示需要异步查询，调度器稍后再问</text>
-  <rect x="30" y="100" width="340" height="40" rx="8" class="b"/>
-  <text x="200" y="119" text-anchor="middle" font-size="12">② update_state_after_alloc：分配块后登记</text>
-  <text x="200" y="135" text-anchor="middle" font-size="11" class="ts">异步加载时同一请求可能被调两次</text>
-  <rect x="30" y="150" width="340" height="40" rx="8" class="ba"/>
-  <text x="200" y="169" text-anchor="middle" font-size="12">③ build_connector_meta：本步搬运计划 → Metadata</text>
-  <text x="200" y="185" text-anchor="middle" font-size="11" class="ts">随 SchedulerOutput 下发</text>
-  <line x1="370" y1="170" x2="452" y2="196" class="ln" marker-end="url(#karr)"/>
-  <rect x="454" y="44" width="388" height="40" rx="8" class="b"/>
-  <text x="648" y="63" text-anchor="middle" font-size="12">④ bind_connector_metadata：步前绑定计划单</text>
-  <text x="648" y="79" text-anchor="middle" font-size="11" class="ts">register_kv_caches：预先登记 paged KV buffer</text>
-  <rect x="454" y="94" width="388" height="58" rx="8" class="ba"/>
-  <text x="648" y="113" text-anchor="middle" font-size="12">⑤ start_load_kv：forward 前启动异步加载</text>
-  <text x="648" y="131" text-anchor="middle" font-size="12">wait_for_layer_load：每层 attention 前逐层等</text>
-  <text x="648" y="147" text-anchor="middle" font-size="11" class="ts">加载与上层计算重叠</text>
-  <rect x="454" y="162" width="388" height="58" rx="8" class="b"/>
-  <text x="648" y="181" text-anchor="middle" font-size="12">⑥ save_kv_layer：每层算完即异步保存</text>
-  <text x="648" y="199" text-anchor="middle" font-size="12">wait_for_save：步末统一收尾</text>
-  <text x="648" y="215" text-anchor="middle" font-size="11" class="ts">异步保存必须扣住源块直到报完成</text>
-  <line x1="452" y1="240" x2="370" y2="258" class="ln" marker-end="url(#karr)"/>
-  <rect x="30" y="200" width="340" height="46" rx="8" class="b"/>
-  <text x="200" y="219" text-anchor="middle" font-size="12">⑦ update_connector_output：汇总完成 / 失败</text>
-  <text x="200" y="237" text-anchor="middle" font-size="11" class="ts">get_finished / get_transfer_results</text>
-  <rect x="30" y="256" width="340" height="46" rx="8" class="bg"/>
-  <text x="200" y="275" text-anchor="middle" font-size="12">⑧ request_finished：接管块异步保存，可附参数</text>
-  <text x="200" y="293" text-anchor="middle" font-size="11" class="ts">get_finished 归还后块才真正释放</text>
-  <text x="30" y="322" font-size="12" class="ts">worker 侧另有 take_events（KV 事件流）、get_kv_connector_stats（指标）、handle_preemptions（抢占前保护保存中的块）</text>
-</svg>
+<div class="diagram-fig">
+  <img src="/files/diagrams/export/kvconn-01-d.svg" alt="KV Connector 双角色 hook 时序图">
+</div>
 
 <h2 id="消费侧生命周期">
   <span class="i18n-zh">消费侧：一个请求怎么「等 KV」</span>
@@ -199,43 +165,9 @@ author_profile: true
   <li><span class="i18n-zh"><strong>失败兜底</strong>：坏块经 <code>get_block_ids_with_load_errors</code> 上报，按 <code>kv_load_failure_policy</code> 处理——<code>recompute</code>（这几块重新算，稳妥）或 <code>fail</code>（请求直接报错结束）。</span></li>
 </ol>
 
-<svg class="dg" viewBox="0 0 860 240" role="img" aria-label="消费侧 KV 加载状态流">
-  <defs>
-    <marker id="karr2" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
-      <path d="M0,0L10,5L0,10z" class="arrp"/>
-    </marker>
-  </defs>
-  <rect x="20" y="60" width="130" height="52" rx="8" class="b"/>
-  <text x="85" y="82" text-anchor="middle" font-size="12">新请求到达</text>
-  <text x="85" y="100" text-anchor="middle" font-size="11" class="ts">（或新增前缀）</text>
-  <line x1="150" y1="86" x2="186" y2="86" class="ln" marker-end="url(#karr2)"/>
-  <rect x="188" y="60" width="170" height="52" rx="8" class="ba"/>
-  <text x="273" y="82" text-anchor="middle" font-size="12">① 命中查询</text>
-  <text x="273" y="100" text-anchor="middle" font-size="11" class="ts">get_num_new_matched_tokens</text>
-  <line x1="358" y1="86" x2="394" y2="86" class="ln" marker-end="url(#karr2)"/>
-  <rect x="396" y="60" width="170" height="52" rx="8" class="b"/>
-  <text x="481" y="82" text-anchor="middle" font-size="12">② 分配落地块</text>
-  <text x="481" y="100" text-anchor="middle" font-size="11" class="ts">update_state_after_alloc</text>
-  <line x1="566" y1="86" x2="602" y2="86" class="ln" marker-end="url(#karr2)"/>
-  <rect x="604" y="60" width="150" height="52" rx="8" class="ba"/>
-  <text x="679" y="82" text-anchor="middle" font-size="12">③ WAITING_FOR_REMOTE_KVS</text>
-  <text x="679" y="100" text-anchor="middle" font-size="11" class="ts">异步拉取，不占 GPU 步</text>
-  <path d="M679,112 L679,150 L500,150" class="ln" marker-end="url(#karr2)"/>
-  <rect x="360" y="126" width="140" height="48" rx="8" class="bg"/>
-  <text x="430" y="146" text-anchor="middle" font-size="12">④ 逐层加载完成</text>
-  <text x="430" y="164" text-anchor="middle" font-size="11" class="ts">KVConnectorOutput 上报</text>
-  <path d="M360,150 L200,150 L200,132" class="ln" marker-end="url(#karr2)"/>
-  <rect x="120" y="182" width="180" height="44" rx="8" class="bg"/>
-  <text x="210" y="200" text-anchor="middle" font-size="12">⑤ 放回调度队列</text>
-  <text x="210" y="218" text-anchor="middle" font-size="11" class="ts">从命中位置继续 prefill</text>
-  <path d="M430,174 L430,204 L302,204" class="ln" marker-end="url(#karr2)"/>
-  <rect x="560" y="182" width="150" height="44" rx="8" class="br"/>
-  <text x="635" y="200" text-anchor="middle" font-size="12">加载失败（坏块上报）</text>
-  <text x="635" y="218" text-anchor="middle" font-size="11" class="ts">kv_load_failure_policy</text>
-  <text x="722" y="216" font-size="11" class="ts">recompute → 重算</text>
-  <text x="722" y="232" font-size="11" class="ts">fail → 请求报错结束</text>
-  <text x="20" y="30" font-size="12" class="ts">生产侧对称：save_kv_layer 逐层异步存 → wait_for_save 步末收尾 → request_finished 接管块异步保存 → get_finished 归还</text>
-</svg>
+<div class="diagram-fig">
+  <img src="/files/diagrams/export/kvconn-02-d.svg" alt="消费侧 KV 加载状态流">
+</div>
 
 <h2 id="隐性约束">
   <span class="i18n-zh">五个容易踩的坑</span>

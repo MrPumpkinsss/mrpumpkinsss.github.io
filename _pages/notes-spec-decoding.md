@@ -42,6 +42,9 @@ author_profile: true
   .tldr ul { margin: 6px 0 2px; padding-left: 20px; }
   .tldr li { margin-bottom: 5px; }
   html[data-theme="dark"] .tldr { background: #41321b; border-left-color: #d9a04b; }
+.diagram-fig { background:#fff; border:1px solid #ddd; border-radius:8px; padding:12px; margin:10px auto; max-width:860px; }
+.diagram-fig img { width:100%; height:auto; display:block; }
+html[data-theme="dark"] .diagram-fig { border-color:#444; }
 </style>
 
 <p>
@@ -109,41 +112,9 @@ author_profile: true
   <li><span class="i18n-zh"><strong>本步净产出</strong>：「北京」「的」「春」3 个 token，而目标模型只跑了一次前向。若 3 个草稿全对：净产出 4 个（3 草稿 + 1 bonus，bonus 从 p₄ 采样）。</span></li>
 </ol>
 
-<svg class="dg" viewBox="0 0 860 240" role="img" aria-label="草稿-验证一次迭代示意图">
-  <defs>
-    <marker id="sdarr" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
-      <path d="M0,0L10,5L0,10z" class="arrp"/>
-    </marker>
-  </defs>
-  <text x="30" y="26" font-size="13">草稿（串行 k 次，小模型）</text>
-  <rect x="30" y="38" width="120" height="46" rx="8" class="b"/><text x="90" y="58" text-anchor="middle" font-size="12">猜「北京」</text><text x="90" y="76" text-anchor="middle" font-size="11" class="ts">q₁=0.9</text>
-  <line x1="150" y1="61" x2="176" y2="61" class="ln" marker-end="url(#sdarr)"/>
-  <rect x="178" y="38" width="120" height="46" rx="8" class="b"/><text x="238" y="58" text-anchor="middle" font-size="12">猜「的」</text><text x="238" y="76" text-anchor="middle" font-size="11" class="ts">q₂=0.9</text>
-  <line x1="298" y1="61" x2="324" y2="61" class="ln" marker-end="url(#sdarr)"/>
-  <rect x="326" y="38" width="120" height="46" rx="8" class="b"/><text x="386" y="58" text-anchor="middle" font-size="12">猜「冬天」</text><text x="386" y="76" text-anchor="middle" font-size="11" class="ts">q₃=0.6</text>
-  <line x1="446" y1="61" x2="472" y2="61" class="ln" marker-end="url(#sdarr)"/>
-  <rect x="474" y="38" width="150" height="46" rx="8" class="ba"/>
-  <text x="549" y="58" text-anchor="middle" font-size="12">目标模型一次前向</text>
-  <text x="549" y="76" text-anchor="middle" font-size="11" class="ts">验证 k+1…k 个位置</text>
-  <text x="660" y="26" font-size="13">验证结果（token 级）</text>
-  <rect x="660" y="38" width="56" height="40" rx="6" class="cellok"/><text x="688" y="63" text-anchor="middle" font-size="13">北京</text>
-  <rect x="720" y="38" width="56" height="40" rx="6" class="cellok"/><text x="748" y="63" text-anchor="middle" font-size="13">的</text>
-  <rect x="780" y="38" width="56" height="40" rx="6" class="cellno"/><text x="808" y="63" text-anchor="middle" font-size="13">冬✗</text>
-  <rect x="660" y="86" width="176" height="40" rx="6" class="bg"/>
-  <text x="748" y="111" text-anchor="middle" font-size="12">拒绝位重采 →「春」</text>
-  <text x="30" y="130" font-size="13">目标模型验证：</text>
-  <rect x="140" y="150" width="100" height="44" rx="8" class="b"/><text x="190" y="168" text-anchor="middle" font-size="12">位置1</text><text x="190" y="186" text-anchor="middle" font-size="11" class="ts">✓ 0.92≥q</text>
-  <rect x="250" y="150" width="100" height="44" rx="8" class="b"/><text x="300" y="168" text-anchor="middle" font-size="12">位置2</text><text x="300" y="186" text-anchor="middle" font-size="11" class="ts">✓ 0.78 抽中</text>
-  <rect x="360" y="150" width="100" height="44" rx="8" class="br"/><text x="410" y="168" text-anchor="middle" font-size="12">位置3</text><text x="410" y="186" text-anchor="middle" font-size="11" class="ts">✗ 0.083 拒绝</text>
-  <rect x="470" y="150" width="120" height="44" rx="8" class="bb"/>
-  <text x="530" y="168" text-anchor="middle" font-size="12">norm(p−q)+ 重采</text>
-  <text x="530" y="186" text-anchor="middle" font-size="11" class="ts">后段草稿全部丢弃</text>
-  <line x1="590" y1="172" x2="616" y2="172" class="ln" marker-end="url(#sdarr)"/>
-  <rect x="618" y="150" width="120" height="44" rx="8" class="bg"/>
-  <text x="678" y="168" text-anchor="middle" font-size="12">「春」</text>
-  <text x="678" y="186" text-anchor="middle" font-size="11" class="ts">本步净产出 +3</text>
-  <text x="30" y="226" font-size="12" class="ts">关键：目标模型对整个「前缀+3 草稿」只做一次前向；4 个位置的概率并行产出，验证不花额外的目标前向。</text>
-</svg>
+<div class="diagram-fig">
+  <img src="/files/diagrams/export/spec-01-d.svg" alt="草稿-验证一次迭代示意图">
+</div>
 
 <h2 id="拒绝采样数学">
   <span class="i18n-zh">拒绝采样的数学：为什么分布不变</span>
@@ -214,32 +185,9 @@ author_profile: true
   </tbody>
 </table>
 
-<svg class="dg" viewBox="0 0 860 250" role="img" aria-label="目标 hidden state 流向草稿模型示意图">
-  <defs>
-    <marker id="hsarr" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
-      <path d="M0,0L10,5L0,10z" class="arrp"/>
-    </marker>
-  </defs>
-  <text x="30" y="24" font-size="13">目标模型验证前向（一次算 k 个位置）</text>
-  <rect x="30" y="36" width="250" height="70" rx="8" class="b"/>
-  <text x="155" y="58" text-anchor="middle" font-size="12">target forward</text>
-  <text x="155" y="76" text-anchor="middle" font-size="11" class="ts">输出三样：token ids、</text>
-  <text x="155" y="93" text-anchor="middle" font-size="11" class="ts">p 分布、last hidden states</text>
-  <line x1="280" y1="71" x2="316" y2="71" class="ln" marker-end="url(#hsarr)"/>
-  <rect x="318" y="44" width="200" height="54" rx="8" class="ba"/>
-  <text x="418" y="66" text-anchor="middle" font-size="12">提取 hidden states</text>
-  <text x="418" y="85" text-anchor="middle" font-size="11" class="ts">末层 / EAGLE-3 中间层 aux</text>
-  <line x1="518" y1="71" x2="554" y2="71" class="ln" marker-end="url(#hsarr)"/>
-  <rect x="556" y="36" width="286" height="70" rx="8" class="b"/>
-  <text x="699" y="58" text-anchor="middle" font-size="12">草稿头下一轮自回归输入：</text>
-  <text x="699" y="77" text-anchor="middle" font-size="12">h_target + embed(next_token)</text>
-  <text x="699" y="95" text-anchor="middle" font-size="11" class="ts">草稿自己只算「增量」，不重复算前缀</text>
-  <text x="30" y="140" font-size="12" class="ts">vLLM 源码对应：ModelRunnerOutput 携带 hidden_states / sample_hidden_states / aux_hidden_states 三类张量，</text>
-  <text x="30" y="158" font-size="12" class="ts">proposer（EAGLE/extract_hidden_states）消费它们起草；TP 下还会 gather 各 rank 的 hidden states 后拼接（combine_hidden_states）。</text>
-  <text x="30" y="190" font-size="13">标准拒绝采样（独立小模型 / n-gram）：</text>
-  <rect x="30" y="200" width="360" height="40" rx="8" class="bb"/>
-  <text x="210" y="225" text-anchor="middle" font-size="12">hidden states 各算各的，不传输 —— 只有 token id 与概率分布交换</text>
-</svg>
+<div class="diagram-fig">
+  <img src="/files/diagrams/export/spec-02-d.svg" alt="目标 hidden state 流向草稿模型示意图">
+</div>
 
 <h2 id="vllm-实现定位">
   <span class="i18n-zh">vLLM V1 的实现细节（源码定位）</span>

@@ -1,0 +1,72 @@
+<mxfile host="app.diagrams.net">
+  <diagram name="d" id="d">
+    <mxGraphModel dx="1000" dy="600" grid="0" page="1" pageWidth="880" pageHeight="375" math="0" shadow="0">
+      <root>
+        <mxCell id="0"/><mxCell id="1" parent="0"/>
+        <mxCell id="t1" value="不切块：一个长 prompt 一步吃光整个预算" style="text;html=1;fontSize=14;fontColor=#333333;" vertex="1" parent="1">
+          <mxGeometry x="30" y="10" width="500" height="24" as="geometry"/>
+        </mxCell>
+        <mxCell id="la1" value="GPU" style="text;html=1;fontSize=12;fontColor=#666666;" vertex="1" parent="1">
+          <mxGeometry x="100" y="60" width="50" height="20" as="geometry"/>
+        </mxCell>
+        <mxCell id="big" value="32K prompt 的 prefill 一口气算完 —— 连续占满 4 个 step" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff3e0;strokeColor=#e0a04a;fontSize=12;fontColor=#333333;" vertex="1" parent="1">
+          <mxGeometry x="170" y="52" width="600" height="44" as="geometry"/>
+        </mxCell>
+        <mxCell id="la2" value="decode 请求" style="text;html=1;fontSize=12;fontColor=#666666;" vertex="1" parent="1">
+          <mxGeometry x="80" y="118" width="80" height="20" as="geometry"/>
+        </mxCell>
+        <mxCell id="w1" value="干等" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f2f2f4;strokeColor=#b9bcc4;fontSize=11;fontColor=#666666;" vertex="1" parent="1">
+          <mxGeometry x="170" y="112" width="138" height="32" as="geometry"/>
+        </mxCell>
+        <mxCell id="w2" value="干等" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f2f2f4;strokeColor=#b9bcc4;fontSize=11;fontColor=#666666;" vertex="1" parent="1">
+          <mxGeometry x="327" y="112" width="138" height="32" as="geometry"/>
+        </mxCell>
+        <mxCell id="w3" value="干等" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f2f2f4;strokeColor=#b9bcc4;fontSize=11;fontColor=#666666;" vertex="1" parent="1">
+          <mxGeometry x="484" y="112" width="138" height="32" as="geometry"/>
+        </mxCell>
+        <mxCell id="w4" value="干等" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f2f2f4;strokeColor=#b9bcc4;fontSize=11;fontColor=#666666;" vertex="1" parent="1">
+          <mxGeometry x="641" y="112" width="129" height="32" as="geometry"/>
+        </mxCell>
+        <mxCell id="bad" value="这段时间 decode 完全停摆：token 间隔（ITL）从 ~10ms 涨到数百 ms" style="text;html=1;fontSize=12;fontColor=#c0392b;" vertex="1" parent="1">
+          <mxGeometry x="170" y="152" width="600" height="22" as="geometry"/>
+        </mxCell>
+        <mxCell id="t2" value="切块后（V1 默认开启）：每个 step ＝ 全部 decode 请求 ＋ 一段 prefill chunk" style="text;html=1;fontSize=14;fontColor=#333333;" vertex="1" parent="1">
+          <mxGeometry x="30" y="196" width="640" height="24" as="geometry"/>
+        </mxCell>
+        <mxCell id="la3" value="GPU" style="text;html=1;fontSize=12;fontColor=#666666;" vertex="1" parent="1">
+          <mxGeometry x="100" y="242" width="50" height="20" as="geometry"/>
+        </mxCell>
+        <mxCell id="c1" value="step 1&lt;br&gt;chunk 8182&lt;br&gt;＋ decode×10" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#eef3fd;strokeColor=#7a97d4;fontSize=11;fontColor=#333333;" vertex="1" parent="1">
+          <mxGeometry x="170" y="232" width="138" height="56" as="geometry"/>
+        </mxCell>
+        <mxCell id="c2" value="step 2&lt;br&gt;chunk 8192&lt;br&gt;＋ decode×10" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#eef3fd;strokeColor=#7a97d4;fontSize=11;fontColor=#333333;" vertex="1" parent="1">
+          <mxGeometry x="327" y="232" width="138" height="56" as="geometry"/>
+        </mxCell>
+        <mxCell id="c3" value="step 3&lt;br&gt;chunk 8192&lt;br&gt;＋ decode×10" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#eef3fd;strokeColor=#7a97d4;fontSize=11;fontColor=#333333;" vertex="1" parent="1">
+          <mxGeometry x="484" y="232" width="138" height="56" as="geometry"/>
+        </mxCell>
+        <mxCell id="c4" value="step 4&lt;br&gt;最后一段 7682&lt;br&gt;＋ decode×10" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#eef3fd;strokeColor=#7a97d4;fontSize=11;fontColor=#333333;" vertex="1" parent="1">
+          <mxGeometry x="641" y="232" width="129" height="56" as="geometry"/>
+        </mxCell>
+        <mxCell id="la4" value="decode 请求" style="text;html=1;fontSize=12;fontColor=#666666;" vertex="1" parent="1">
+          <mxGeometry x="80" y="312" width="80" height="20" as="geometry"/>
+        </mxCell>
+        <mxCell id="g1" value="出 1 个 token" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#e9f6ee;strokeColor=#59a97c;fontSize=11;fontColor=#333333;" vertex="1" parent="1">
+          <mxGeometry x="170" y="306" width="138" height="32" as="geometry"/>
+        </mxCell>
+        <mxCell id="g2" value="出 1 个 token" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#e9f6ee;strokeColor=#59a97c;fontSize=11;fontColor=#333333;" vertex="1" parent="1">
+          <mxGeometry x="327" y="306" width="138" height="32" as="geometry"/>
+        </mxCell>
+        <mxCell id="g3" value="出 1 个 token" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#e9f6ee;strokeColor=#59a97c;fontSize=11;fontColor=#333333;" vertex="1" parent="1">
+          <mxGeometry x="484" y="306" width="138" height="32" as="geometry"/>
+        </mxCell>
+        <mxCell id="g4" value="出 1 个 token" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#e9f6ee;strokeColor=#59a97c;fontSize=11;fontColor=#333333;" vertex="1" parent="1">
+          <mxGeometry x="641" y="306" width="129" height="32" as="geometry"/>
+        </mxCell>
+        <mxCell id="good" value="decode 每步都出字（ITL 平滑）；代价：这个 32K 请求自己的首 token 时延被摊到 ~4 个 step" style="text;html=1;fontSize=12;fontColor=#217a4b;" vertex="1" parent="1">
+          <mxGeometry x="170" y="346" width="620" height="22" as="geometry"/>
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>

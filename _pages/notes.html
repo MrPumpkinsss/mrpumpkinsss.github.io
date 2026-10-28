@@ -91,6 +91,11 @@ author_profile: true
       <span class="cat-tag analysis"><span class="i18n-zh">源码剖析</span><span class="i18n-en">source</span></span>
       <span class="cat-desc"><span class="i18n-zh">batch queue 让 pp_size(+1) 个 step 在飞、decode_stagger 环形节奏、采样 token 的两条回传路径。</span><span class="i18n-en">The batch queue keeping pp_size(+1) steps in flight, the decode_stagger ring cadence, and the two sampled-token return paths.</span></span>
     </li>
+    <li>
+      <a href="/notes/vllm-chunked-prefill/"><span class="i18n-zh">Chunked Prefill 机制剖析</span><span class="i18n-en">Chunked prefill internals</span></a>
+      <span class="cat-tag analysis"><span class="i18n-zh">源码剖析</span><span class="i18n-en">source</span></span>
+      <span class="cat-desc"><span class="i18n-zh">长 prompt 怎么被预算切块、和 decode 混批：五级 min 漏斗、非最终 chunk 不采样、边界修剪规则。</span><span class="i18n-en">How long prompts are split by the token budget and co-batched with decode: the funnel, chunk states, and boundary rules.</span></span>
+    </li>
   </ul>
 </div>
 

@@ -34,6 +34,9 @@ author_profile: true
     margin: 16px auto; max-width: 800px; background: #fff;
   }
   html[data-theme="dark"] details.prwiki { border-color: #444; background: #26282c; }
+.diagram-fig { background:#fff; border:1px solid #ddd; border-radius:8px; padding:12px; margin:10px auto; max-width:860px; }
+.diagram-fig img { width:100%; height:auto; display:block; }
+html[data-theme="dark"] .diagram-fig { border-color:#444; }
 </style>
 
 <p>
@@ -71,36 +74,9 @@ author_profile: true
   <span class="i18n-zh"><strong>自适应验证（Adaptive Verification, AV）</strong>是投机解码里每步<strong>动态决定草稿多少个 token</strong>的机制：预算 k′ 随上一步的接受情况变化，而不是固定草稿深度。问题在于预算选择原来用 <code>torch.compile(dynamic=True)</code> 实现——serving 中途会现场编译 4–5 个 Dynamo 图（每进程卡 1.8–4.7 秒），且每个预算绑定步的 host 开销高达 76–90µs。本 PR 把预算选择换成<strong>单次启动的 Triton 内核</strong>（Triton＝用 Python 写 GPU kernel 的编译工具），warmup（预热）时一次性 JIT（即时编译）：serving 中不再有编译，host 开销 ~15µs（约 6×），GPU 端 85–100µs → 22–30µs。实测 Qwen3-4B + DSpark（一种草稿模型方案）、GSM8K 数据集、并发 16（H200）：4,783 → 6,803 tok/s（每秒生成 token 数；+42%），精度不变。</span>
 </p>
 
-<svg class="dg" viewBox="0 0 860 236" role="img" aria-label="自适应验证闭环结构图">
-  <defs>
-    <marker id="arr1" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
-      <path d="M0,0L10,5L0,10z" class="arrp"/>
-    </marker>
-  </defs>
-  <rect x="18" y="52" width="152" height="58" rx="8" class="b"/>
-  <text x="94" y="76" text-anchor="middle" font-size="13">上一步验证结果</text>
-  <text x="94" y="95" text-anchor="middle" font-size="12" class="ts">（接受长度等）</text>
-  <line x1="170" y1="81" x2="206" y2="81" class="ln" marker-end="url(#arr1)"/>
-  <rect x="208" y="44" width="212" height="74" rx="8" class="ba"/>
-  <text x="314" y="68" text-anchor="middle" font-size="13">草稿预算选择内核</text>
-  <text x="314" y="87" text-anchor="middle" font-size="12">Adaptive Verification</text>
-  <text x="314" y="105" text-anchor="middle" font-size="12" class="ts">（Triton · 单次启动）</text>
-  <line x1="420" y1="81" x2="456" y2="81" class="ln" marker-end="url(#arr1)"/>
-  <rect x="458" y="52" width="168" height="58" rx="8" class="b"/>
-  <text x="542" y="76" text-anchor="middle" font-size="13">草稿模型起草</text>
-  <text x="542" y="95" text-anchor="middle" font-size="12">k′ 个 token</text>
-  <line x1="626" y1="81" x2="662" y2="81" class="ln" marker-end="url(#arr1)"/>
-  <rect x="664" y="52" width="178" height="58" rx="8" class="b"/>
-  <text x="753" y="76" text-anchor="middle" font-size="13">目标模型批量验证</text>
-  <text x="753" y="95" text-anchor="middle" font-size="12" class="ts">（rejection sampling）</text>
-  <path d="M753,110 L753,168 L566,168" class="ln" marker-end="url(#arr1)"/>
-  <rect x="396" y="140" width="170" height="56" rx="8" class="b"/>
-  <text x="481" y="163" text-anchor="middle" font-size="13">接受 / 回滚</text>
-  <text x="481" y="181" text-anchor="middle" font-size="12" class="ts">更新序列与统计</text>
-  <path d="M396,168 L94,168 L94,110" class="ln" marker-end="url(#arr1)"/>
-  <text x="20" y="205" font-size="12" class="ts">本周改动：torch.compile(dynamic=True) → Triton；预算步 host 76–90µs → ~15µs</text>
-  <text x="20" y="224" font-size="12" class="ts">替代方案 #62539（启动期预编译 Dynamo）吞吐持平（6,756 tok/s），本 PR 直接消灭了编译环节</text>
-</svg>
+<div class="diagram-fig">
+  <img src="/files/diagrams/export/vllm-01-d.svg" alt="自适应验证闭环结构图">
+</div>
 
 <h3 id="sharded-draft-logits">2 · 批分片采样下，draft logits 缓存也跟着分片 · <a href="https://github.com/vllm-project/vllm/pull/63554">#63554</a></h3>
 
@@ -108,37 +84,9 @@ author_profile: true
   <span class="i18n-zh">vLLM 正在推进<strong>批分片采样（batch-sharded sampling）</strong>：目标模型的 logits 沿请求维分片到各 TP rank，请求按 <code>req_state_idx % tp_size</code> 归属，每个 rank 只对<strong>自己拥有的请求</strong>做采样与投机验证。但草稿模型的 logits 缓存此前仍按全量 <code>max_num_seqs</code> 行在每个 rank 上分配——批分片下每 rank 实际只用到 1/TP，其余全是白占的显存。本 PR 让每个 rank 只为自己要验证的请求分配 draft logits：行数 <code>max_num_seqs → ⌈max_num_seqs/tp⌉</code>，起草仍全量复制（保证 rank 间一致），读写统一走 <code>shard_owner / shard_row</code> 两个 Triton helper（单 TP 时编译退化回原行为）；省出的显存直接还给 KV cache。</span>
 </p>
 
-<svg class="dg" viewBox="0 0 860 252" role="img" aria-label="draft logits 分片前后对比图">
-  <defs>
-    <marker id="arr2" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
-      <path d="M0,0L10,5L0,10z" class="arrp"/>
-    </marker>
-  </defs>
-  <text x="18" y="26" font-size="13">改前：每个 rank 都分配全量 draft logits</text>
-  <text x="452" y="26" font-size="13">改后：只存本 rank 负责验证的请求</text>
-  <rect x="18" y="40" width="400" height="150" rx="8" class="b"/>
-  <text x="218" y="62" text-anchor="middle" font-size="12">TP rank 0（max_num_seqs = 8 行，TP = 4）</text>
-  <rect x="40"  y="76" width="42" height="40" rx="4" class="cell"/><text x="61"  y="100" text-anchor="middle" font-size="11">req0</text>
-  <rect x="86"  y="76" width="42" height="40" rx="4" class="cellx"/><text x="107" y="100" text-anchor="middle" font-size="11">req1</text>
-  <rect x="132" y="76" width="42" height="40" rx="4" class="cellx"/><text x="153" y="100" text-anchor="middle" font-size="11">req2</text>
-  <rect x="178" y="76" width="42" height="40" rx="4" class="cellx"/><text x="199" y="100" text-anchor="middle" font-size="11">req3</text>
-  <rect x="224" y="76" width="42" height="40" rx="4" class="cell"/><text x="245" y="100" text-anchor="middle" font-size="11">req4</text>
-  <rect x="270" y="76" width="42" height="40" rx="4" class="cellx"/><text x="291" y="100" text-anchor="middle" font-size="11">req5</text>
-  <rect x="316" y="76" width="42" height="40" rx="4" class="cellx"/><text x="337" y="100" text-anchor="middle" font-size="11">req6</text>
-  <rect x="362" y="76" width="42" height="40" rx="4" class="cellx"/><text x="383" y="100" text-anchor="middle" font-size="11">req7</text>
-  <text x="40" y="146" font-size="12">只有 req0 / req4 属于 rank 0（idx % 4 == 0），</text>
-  <text x="40" y="166" font-size="12" class="ts">其余 (TP−1)/TP 的行是白占的显存</text>
-  <rect x="452" y="40" width="390" height="150" rx="8" class="bg"/>
-  <text x="647" y="62" text-anchor="middle" font-size="12">TP rank 0：只保留 2 行（⌈8/4⌉）</text>
-  <rect x="480" y="76" width="52" height="40" rx="4" class="cell"/><text x="506" y="100" text-anchor="middle" font-size="11">req0</text>
-  <rect x="540" y="76" width="52" height="40" rx="4" class="cell"/><text x="566" y="100" text-anchor="middle" font-size="11">req4</text>
-  <text x="480" y="146" font-size="12">行号规则：row = req_state_idx // TP；</text>
-  <text x="480" y="166" font-size="12" class="ts">读写全走 shard_owner / shard_row 两个 Triton helper</text>
-  <line x1="647" y1="190" x2="647" y2="212" class="ln" marker-end="url(#arr2)"/>
-  <rect x="510" y="214" width="274" height="30" rx="8" class="bg"/>
-  <text x="647" y="234" text-anchor="middle" font-size="12">省出的显存 → 还给 KV cache</text>
-  <text x="18" y="234" font-size="12" class="ts">起草仍全量复制（rank 间一致性），仅缓存分片</text>
-</svg>
+<div class="diagram-fig">
+  <img src="/files/diagrams/export/vllm-02-d.svg" alt="draft logits 分片前后对比图">
+</div>
 
 <h3 id="kv-balanced-mla">3 · Kimi-K3「按请求长度均衡」的 FP8 MLA decode · <a href="https://github.com/vllm-project/vllm/pull/63638">#63638</a></h3>
 
@@ -146,27 +94,9 @@ author_profile: true
   <span class="i18n-zh">Agent 类负载的特点是<strong>同一批里请求的上下文长度差异极大</strong>（有的刚开头、有的已经滚了几万 token），decode attention 的负载随之失衡，整批被最长的请求拖住。新后端 <code>--attention-backend KIMI_K3_KV_BALANCED_MLA</code>（Blackwell，opt-in）按<strong>每个请求自身的长度比例</strong>切分它的 KV，让各 GPU 的 decode 工作量重新均衡。实测（GB300，AgentX 长度分布）：decode attention 相对 TOKENSPEED_MLA（min_split_kv=8）1.34–1.59×、相对其默认配置 1.91–2.67×；端到端 DEP16 decode（3P1D）：+7.8% TPS/GPU、p90 交互时延改善 20%。</span>
 </p>
 
-<svg class="dg" viewBox="0 0 860 262" role="img" aria-label="KV 均衡切分前后对比图">
-  <text x="18" y="26" font-size="13">默认：每请求固定切分 → 长请求压垮个别 GPU</text>
-  <text x="452" y="26" font-size="13">KV-balanced：按各请求自身长度切分 → 均衡</text>
-  <rect x="40" y="80" width="60" height="34"  class="b"/>  <text x="70" y="102" text-anchor="middle" font-size="12">GPU1</text>
-  <rect x="116" y="60" width="60" height="54"  class="b"/>  <text x="146" y="102" text-anchor="middle" font-size="12">GPU2</text>
-  <rect x="192" y="34" width="60" height="80"  class="b"/>  <text x="222" y="102" text-anchor="middle" font-size="12">GPU3</text>
-  <rect x="268" y="34" width="60" height="140" class="hi"/> <text x="298" y="110" text-anchor="middle" font-size="12">GPU4</text>
-  <line x1="30" y1="174" x2="420" y2="174" class="ln"/>
-  <text x="70" y="194" text-anchor="middle" font-size="12" class="ts">短</text>
-  <text x="146" y="194" text-anchor="middle" font-size="12" class="ts">中</text>
-  <text x="222" y="194" text-anchor="middle" font-size="12" class="ts">较长</text>
-  <text x="298" y="194" text-anchor="middle" font-size="12" class="ts">最长请求 → 整批等它</text>
-  <rect x="470" y="60" width="80" height="114" class="bg"/> <text x="510" y="102" text-anchor="middle" font-size="12">GPU1</text>
-  <rect x="560" y="60" width="80" height="114" class="bg"/> <text x="600" y="102" text-anchor="middle" font-size="12">GPU2</text>
-  <rect x="650" y="60" width="80" height="114" class="bg"/> <text x="690" y="102" text-anchor="middle" font-size="12">GPU3</text>
-  <rect x="740" y="60" width="80" height="114" class="bg"/> <text x="780" y="102" text-anchor="middle" font-size="12">GPU4</text>
-  <line x1="460" y1="174" x2="850" y2="174" class="ln"/>
-  <text x="655" y="194" text-anchor="middle" font-size="12" class="ts">decode 工作量被拉平（柱高 = 每 GPU 的 attention 负载）</text>
-  <text x="18" y="226" font-size="12" class="ts">批内上下文长度差异越大收益越大（agent 场景）；GB300 decode attention 1.34–1.59× / 默认 1.91–2.67×，DEP16 端到端 +7.8% TPS/GPU</text>
-  <text x="18" y="246" font-size="12" class="ts">构建在 MLACommonBackend 等公共类上，代码位于 vllm/models/kimi_k3/nvidia/kv_balanced_mla/</text>
-</svg>
+<div class="diagram-fig">
+  <img src="/files/diagrams/export/vllm-03-d.svg" alt="KV 均衡切分前后对比图">
+</div>
 
 <h3 id="fast-start-cache-key">4 · Fast Start：权重缓存 key 补上「内核后端」维度 · <a href="https://github.com/vllm-project/vllm/pull/63506">#63506</a></h3>
 
@@ -174,46 +104,9 @@ author_profile: true
   <span class="i18n-zh"><strong>Fast Start</strong>（路线图 <a href="https://github.com/vllm-project/vllm/pull/56049">#56049</a>）的思路：由常驻守护进程（daemon）把权重<strong>预处理一次</strong>（<code>process_weights_after_loading</code>：量化、shuffle、repack 成所选内核后端的布局），后续 engine 启动直接走 IPC 共享内存映射，跳过加载与预处理。坑在于：<code>WeightCacheKey</code> 里没有 <code>--moe-backend / --linear-backend</code>——daemon 用 CUTLASS 布局处理好的权重，可能被一个解析成 TRT-LLM 后端的 engine 映射走，<code>/health</code> 照样 200，但<strong>每个输出都是错的</strong>。本 PR 把 <code>moe_backend、linear_backend、linear_backend_per_quant</code> 加进 key（取「配置值」而非「解析值」，保守策略），后端不匹配时先报 key miss，再按默认 <code>fallback=true</code> 回退磁盘加载。</span>
 </p>
 
-<svg class="dg" viewBox="0 0 860 292" role="img" aria-label="Fast Start 权重缓存结构图">
-  <defs>
-    <marker id="arr4" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
-      <path d="M0,0L10,5L0,10z" class="arrp"/>
-    </marker>
-  </defs>
-  <rect x="18" y="46" width="264" height="118" rx="8" class="b"/>
-  <text x="150" y="68" text-anchor="middle" font-size="13">常驻权重守护进程（daemon）</text>
-  <text x="34" y="92" font-size="12">① 加载原始权重</text>
-  <text x="34" y="112" font-size="12">② process_weights_after_loading：</text>
-  <text x="48" y="131" font-size="12" class="ts">量化 / shuffle / repack 成后端布局</text>
-  <text x="34" y="151" font-size="12">③ 按 key 写入共享缓存（只做一次）</text>
-  <line x1="282" y1="105" x2="326" y2="105" class="ln" marker-end="url(#arr4)"/>
-  <rect x="328" y="52" width="216" height="106" rx="8" class="ba"/>
-  <text x="436" y="74" text-anchor="middle" font-size="13">共享权重缓存</text>
-  <text x="436" y="92" text-anchor="middle" font-size="12">WeightCacheKey =</text>
-  <text x="436" y="110" text-anchor="middle" font-size="12">{model, quant,</text>
-  <text x="436" y="128" text-anchor="middle" font-size="12">moe_backend, linear_backend,</text>
-  <text x="436" y="146" text-anchor="middle" font-size="12" class="ts">linear_backend_per_quant, …}</text>
-  <rect x="606" y="46" width="236" height="58" rx="8" class="b"/>
-  <text x="724" y="70" text-anchor="middle" font-size="13">Engine 启动</text>
-  <text x="724" y="89" text-anchor="middle" font-size="12" class="ts">（自带 --moe-backend 等配置）</text>
-  <line x1="724" y1="104" x2="724" y2="128" class="ln" marker-end="url(#arr4)"/>
-  <rect x="606" y="130" width="236" height="52" rx="8" class="b"/>
-  <text x="724" y="152" text-anchor="middle" font-size="12">用自己的配置计算 WeightCacheKey</text>
-  <text x="724" y="171" text-anchor="middle" font-size="12">去缓存里匹配</text>
-  <path d="M680,182 L680,222 L596,222" class="ln" marker-end="url(#arr4)"/>
-  <path d="M768,182 L768,220" class="ln" marker-end="url(#arr4)"/>
-  <text x="640" y="212" font-size="12" class="ts">命中</text>
-  <text x="778" y="212" font-size="12" class="ts">未命中</text>
-  <rect x="420" y="224" width="176" height="48" rx="8" class="bg"/>
-  <text x="508" y="244" text-anchor="middle" font-size="12">命中：IPC mmap 零拷贝</text>
-  <text x="508" y="262" text-anchor="middle" font-size="12" class="ts">跳过加载与预处理</text>
-  <rect x="620" y="224" width="196" height="48" rx="8" class="bb"/>
-  <text x="718" y="244" text-anchor="middle" font-size="12">未命中：回退磁盘加载</text>
-  <text x="718" y="262" text-anchor="middle" font-size="12" class="ts">（fallback=true，默认）</text>
-  <text x="18" y="244" font-size="12" class="ts">本周 #63506：key 原来缺内核后端 →</text>
-  <text x="18" y="263" font-size="12" class="ts">后端不同的 engine 映射到错误布局权重，</text>
-  <text x="18" y="282" font-size="12" class="ts">/health 200 但输出全错；现先报 miss 再回退</text>
-</svg>
+<div class="diagram-fig">
+  <img src="/files/diagrams/export/vllm-04-d.svg" alt="Fast Start 权重缓存结构图">
+</div>
 
 <h3 id="quick-hits">
   <span class="i18n-zh">快讯</span>

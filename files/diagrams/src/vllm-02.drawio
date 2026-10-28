@@ -1,0 +1,26 @@
+<mxfile host="app.diagrams.net">
+  <diagram name="d" id="d">
+    <mxGraphModel dx="1000" dy="600" grid="0" page="1" pageWidth="860" pageHeight="252" math="0" shadow="0">
+      <root>
+        <mxCell id="0"/><mxCell id="1" parent="0"/>
+    <mxCell id="c2" value="TP rank 0（max_num_seqs = 8 行，TP = 4）&lt;br&gt;req0&lt;br&gt;req1&lt;br&gt;req2&lt;br&gt;req3&lt;br&gt;req4&lt;br&gt;req5&lt;br&gt;req6&lt;br&gt;req7&lt;br&gt;只有 req0 / req4 属于 rank 0（idx % 4 == 0），&lt;br&gt;其余 (TP−1)/TP 的行是白占的显存" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#eef3fd;strokeColor=#7a97d4;fontColor=#333333;align=center;verticalAlign=middle;fontSize=12;" vertex="1" parent="1"><mxGeometry x="18" y="40" width="400" height="150" as="geometry"/></mxCell>
+    <mxCell id="c3" value="" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#c9d7f2;strokeColor=#7a97d4;fontColor=#333333;align=center;verticalAlign=middle;" vertex="1" parent="1"><mxGeometry x="40" y="76" width="42" height="40" as="geometry"/></mxCell>
+    <mxCell id="c4" value="" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#e3e5ea;strokeColor=#b9bcc4;fontColor=#333333;align=center;verticalAlign=middle;" vertex="1" parent="1"><mxGeometry x="86" y="76" width="42" height="40" as="geometry"/></mxCell>
+    <mxCell id="c5" value="" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#e3e5ea;strokeColor=#b9bcc4;fontColor=#333333;align=center;verticalAlign=middle;" vertex="1" parent="1"><mxGeometry x="132" y="76" width="42" height="40" as="geometry"/></mxCell>
+    <mxCell id="c6" value="" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#e3e5ea;strokeColor=#b9bcc4;fontColor=#333333;align=center;verticalAlign=middle;" vertex="1" parent="1"><mxGeometry x="178" y="76" width="42" height="40" as="geometry"/></mxCell>
+    <mxCell id="c7" value="" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#c9d7f2;strokeColor=#7a97d4;fontColor=#333333;align=center;verticalAlign=middle;" vertex="1" parent="1"><mxGeometry x="224" y="76" width="42" height="40" as="geometry"/></mxCell>
+    <mxCell id="c8" value="" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#e3e5ea;strokeColor=#b9bcc4;fontColor=#333333;align=center;verticalAlign=middle;" vertex="1" parent="1"><mxGeometry x="270" y="76" width="42" height="40" as="geometry"/></mxCell>
+    <mxCell id="c9" value="" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#e3e5ea;strokeColor=#b9bcc4;fontColor=#333333;align=center;verticalAlign=middle;" vertex="1" parent="1"><mxGeometry x="316" y="76" width="42" height="40" as="geometry"/></mxCell>
+    <mxCell id="c10" value="" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#e3e5ea;strokeColor=#b9bcc4;fontColor=#333333;align=center;verticalAlign=middle;" vertex="1" parent="1"><mxGeometry x="362" y="76" width="42" height="40" as="geometry"/></mxCell>
+    <mxCell id="c11" value="TP rank 0：只保留 2 行（⌈8/4⌉）&lt;br&gt;req0&lt;br&gt;req4&lt;br&gt;行号规则：row = req_state_idx // TP；&lt;br&gt;读写全走 shard_owner / shard_row 两个 Triton helper" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#e9f6ee;strokeColor=#59a97c;fontColor=#333333;align=center;verticalAlign=middle;fontSize=12;" vertex="1" parent="1"><mxGeometry x="452" y="40" width="390" height="150" as="geometry"/></mxCell>
+    <mxCell id="c12" value="" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#c9d7f2;strokeColor=#7a97d4;fontColor=#333333;align=center;verticalAlign=middle;" vertex="1" parent="1"><mxGeometry x="480" y="76" width="52" height="40" as="geometry"/></mxCell>
+    <mxCell id="c13" value="" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#c9d7f2;strokeColor=#7a97d4;fontColor=#333333;align=center;verticalAlign=middle;" vertex="1" parent="1"><mxGeometry x="540" y="76" width="52" height="40" as="geometry"/></mxCell>
+    <mxCell id="c14" value="省出的显存 → 还给 KV cache" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#e9f6ee;strokeColor=#59a97c;fontColor=#333333;align=center;verticalAlign=middle;fontSize=12;" vertex="1" parent="1"><mxGeometry x="510" y="214" width="274" height="30" as="geometry"/></mxCell>
+    <mxCell id="c15" value="改前：每个 rank 都分配全量 draft logits" style="text;html=1;align=left;verticalAlign=middle;fontColor=#333333;fontSize=13;" vertex="1" parent="1"><mxGeometry x="16" y="13" width="284" height="20.8" as="geometry"/></mxCell>
+    <mxCell id="c16" value="改后：只存本 rank 负责验证的请求" style="text;html=1;align=left;verticalAlign=middle;fontColor=#333333;fontSize=13;" vertex="1" parent="1"><mxGeometry x="450" y="13" width="231" height="20.8" as="geometry"/></mxCell>
+    <mxCell id="c17" value="起草仍全量复制（rank 间一致性），仅缓存分片" style="text;html=1;align=left;verticalAlign=middle;fontColor=#666666;fontSize=12;" vertex="1" parent="1"><mxGeometry x="16" y="222" width="283" height="19.2" as="geometry"/></mxCell>
+    <mxCell id="c18" style="html=1;endArrow=block;endFill=1;strokeColor=#7a879d;strokeWidth=1.4;rounded=0;" edge="1" parent="1"><mxGeometry relative="1" as="geometry"><mxPoint x="647" y="190" as="sourcePoint"/><mxPoint x="647" y="212" as="targetPoint"/></mxGeometry></mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>

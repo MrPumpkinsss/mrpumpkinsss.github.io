@@ -1,0 +1,25 @@
+<mxfile host="app.diagrams.net">
+  <diagram name="d" id="d">
+    <mxGraphModel dx="1000" dy="600" grid="0" page="1" pageWidth="860" pageHeight="240" math="0" shadow="0">
+      <root>
+        <mxCell id="0"/><mxCell id="1" parent="0"/>
+    <mxCell id="c2" value="新请求到达&lt;br&gt;（或新增前缀）" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#eef3fd;strokeColor=#7a97d4;fontColor=#333333;align=center;verticalAlign=middle;fontSize=12;" vertex="1" parent="1"><mxGeometry x="20" y="60" width="130" height="52" as="geometry"/></mxCell>
+    <mxCell id="c3" value="① 命中查询&lt;br&gt;get_num_new_matched_tokens" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff3e0;strokeColor=#e0a04a;fontColor=#333333;align=center;verticalAlign=middle;fontSize=12;" vertex="1" parent="1"><mxGeometry x="188" y="60" width="170" height="52" as="geometry"/></mxCell>
+    <mxCell id="c4" value="② 分配落地块&lt;br&gt;update_state_after_alloc" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#eef3fd;strokeColor=#7a97d4;fontColor=#333333;align=center;verticalAlign=middle;fontSize=12;" vertex="1" parent="1"><mxGeometry x="396" y="60" width="170" height="52" as="geometry"/></mxCell>
+    <mxCell id="c5" value="③ WAITING_FOR_REMOTE_KVS&lt;br&gt;异步拉取，不占 GPU 步" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff3e0;strokeColor=#e0a04a;fontColor=#333333;align=center;verticalAlign=middle;fontSize=12;" vertex="1" parent="1"><mxGeometry x="604" y="60" width="150" height="52" as="geometry"/></mxCell>
+    <mxCell id="c6" value="④ 逐层加载完成&lt;br&gt;KVConnectorOutput 上报" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#e9f6ee;strokeColor=#59a97c;fontColor=#333333;align=center;verticalAlign=middle;fontSize=12;" vertex="1" parent="1"><mxGeometry x="360" y="126" width="140" height="48" as="geometry"/></mxCell>
+    <mxCell id="c7" value="⑤ 放回调度队列&lt;br&gt;从命中位置继续 prefill" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#e9f6ee;strokeColor=#59a97c;fontColor=#333333;align=center;verticalAlign=middle;fontSize=12;" vertex="1" parent="1"><mxGeometry x="120" y="182" width="180" height="44" as="geometry"/></mxCell>
+    <mxCell id="c8" value="加载失败（坏块上报）&lt;br&gt;kv_load_failure_policy" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fdeaea;strokeColor=#d98a8a;fontColor=#333333;align=center;verticalAlign=middle;fontSize=12;" vertex="1" parent="1"><mxGeometry x="560" y="182" width="150" height="44" as="geometry"/></mxCell>
+    <mxCell id="c9" value="recompute → 重算" style="text;html=1;align=left;verticalAlign=middle;fontColor=#666666;fontSize=11;" vertex="1" parent="1"><mxGeometry x="720" y="205" width="107" height="17.6" as="geometry"/></mxCell>
+    <mxCell id="c10" value="fail → 请求报错结束" style="text;html=1;align=left;verticalAlign=middle;fontColor=#666666;fontSize=11;" vertex="1" parent="1"><mxGeometry x="720" y="221" width="122" height="17.6" as="geometry"/></mxCell>
+    <mxCell id="c11" value="生产侧对称：save_kv_layer 逐层异步存 → wait_for_save 步末收尾 → request_finished 接管块异步保存 → get_finished 归还" style="text;html=1;align=left;verticalAlign=middle;fontColor=#666666;fontSize=12;" vertex="1" parent="1"><mxGeometry x="18" y="18" width="762" height="19.2" as="geometry"/></mxCell>
+    <mxCell id="c12" style="html=1;endArrow=block;endFill=1;strokeColor=#7a879d;strokeWidth=1.4;rounded=0;" edge="1" parent="1"><mxGeometry relative="1" as="geometry"><mxPoint x="150" y="86" as="sourcePoint"/><mxPoint x="186" y="86" as="targetPoint"/></mxGeometry></mxCell>
+    <mxCell id="c13" style="html=1;endArrow=block;endFill=1;strokeColor=#7a879d;strokeWidth=1.4;rounded=0;" edge="1" parent="1"><mxGeometry relative="1" as="geometry"><mxPoint x="358" y="86" as="sourcePoint"/><mxPoint x="394" y="86" as="targetPoint"/></mxGeometry></mxCell>
+    <mxCell id="c14" style="html=1;endArrow=block;endFill=1;strokeColor=#7a879d;strokeWidth=1.4;rounded=0;" edge="1" parent="1"><mxGeometry relative="1" as="geometry"><mxPoint x="566" y="86" as="sourcePoint"/><mxPoint x="602" y="86" as="targetPoint"/></mxGeometry></mxCell>
+    <mxCell id="c15" style="html=1;endArrow=block;endFill=1;strokeColor=#7a879d;strokeWidth=1.4;rounded=0;" edge="1" parent="1"><mxGeometry relative="1" as="geometry"><mxPoint x="679" y="112" as="sourcePoint"/><mxPoint x="500" y="150" as="targetPoint"/><Array as="points"><mxPoint x="679" y="150"/></Array></mxGeometry></mxCell>
+    <mxCell id="c16" style="html=1;endArrow=block;endFill=1;strokeColor=#7a879d;strokeWidth=1.4;rounded=0;" edge="1" parent="1"><mxGeometry relative="1" as="geometry"><mxPoint x="360" y="150" as="sourcePoint"/><mxPoint x="200" y="132" as="targetPoint"/><Array as="points"><mxPoint x="200" y="150"/></Array></mxGeometry></mxCell>
+    <mxCell id="c17" style="html=1;endArrow=block;endFill=1;strokeColor=#7a879d;strokeWidth=1.4;rounded=0;" edge="1" parent="1"><mxGeometry relative="1" as="geometry"><mxPoint x="430" y="174" as="sourcePoint"/><mxPoint x="302" y="204" as="targetPoint"/><Array as="points"><mxPoint x="430" y="204"/></Array></mxGeometry></mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>

@@ -1,0 +1,19 @@
+<mxfile host="app.diagrams.net">
+  <diagram name="d" id="d">
+    <mxGraphModel dx="1000" dy="600" grid="0" page="1" pageWidth="860" pageHeight="250" math="0" shadow="0">
+      <root>
+        <mxCell id="0"/><mxCell id="1" parent="0"/>
+    <mxCell id="c2" value="target forward&lt;br&gt;输出三样：token ids、&lt;br&gt;p 分布、last hidden states" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#eef3fd;strokeColor=#7a97d4;fontColor=#333333;align=center;verticalAlign=middle;fontSize=12;" vertex="1" parent="1"><mxGeometry x="30" y="36" width="250" height="70" as="geometry"/></mxCell>
+    <mxCell id="c3" value="提取 hidden states&lt;br&gt;末层 / EAGLE-3 中间层 aux" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff3e0;strokeColor=#e0a04a;fontColor=#333333;align=center;verticalAlign=middle;fontSize=12;" vertex="1" parent="1"><mxGeometry x="318" y="44" width="200" height="54" as="geometry"/></mxCell>
+    <mxCell id="c4" value="草稿头下一轮自回归输入：&lt;br&gt;h_target + embed(next_token)&lt;br&gt;草稿自己只算「增量」，不重复算前缀" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#eef3fd;strokeColor=#7a97d4;fontColor=#333333;align=center;verticalAlign=middle;fontSize=12;" vertex="1" parent="1"><mxGeometry x="556" y="36" width="286" height="70" as="geometry"/></mxCell>
+    <mxCell id="c5" value="hidden states 各算各的，不传输 —— 只有 token id 与概率分布交换" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f2f2f4;strokeColor=#b9bcc4;fontColor=#333333;align=center;verticalAlign=middle;fontSize=12;" vertex="1" parent="1"><mxGeometry x="30" y="200" width="360" height="40" as="geometry"/></mxCell>
+    <mxCell id="c6" value="目标模型验证前向（一次算 k 个位置）" style="text;html=1;align=left;verticalAlign=middle;fontColor=#333333;fontSize=13;" vertex="1" parent="1"><mxGeometry x="28" y="11" width="250" height="20.8" as="geometry"/></mxCell>
+    <mxCell id="c7" value="vLLM 源码对应：ModelRunnerOutput 携带 hidden_states / sample_hidden_states / aux_hidden_states 三类张量，" style="text;html=1;align=left;verticalAlign=middle;fontColor=#666666;fontSize=12;" vertex="1" parent="1"><mxGeometry x="28" y="128" width="705" height="19.2" as="geometry"/></mxCell>
+    <mxCell id="c8" value="proposer（EAGLE/extract_hidden_states）消费它们起草；TP 下还会 gather 各 rank 的 hidden states 后拼接（combine_hidden_states）。" style="text;html=1;align=left;verticalAlign=middle;fontColor=#666666;fontSize=12;" vertex="1" parent="1"><mxGeometry x="28" y="146" width="853" height="19.2" as="geometry"/></mxCell>
+    <mxCell id="c9" value="标准拒绝采样（独立小模型 / n-gram）：" style="text;html=1;align=left;verticalAlign=middle;fontColor=#333333;fontSize=13;" vertex="1" parent="1"><mxGeometry x="28" y="177" width="266" height="20.8" as="geometry"/></mxCell>
+    <mxCell id="c10" style="html=1;endArrow=block;endFill=1;strokeColor=#7a879d;strokeWidth=1.4;rounded=0;" edge="1" parent="1"><mxGeometry relative="1" as="geometry"><mxPoint x="280" y="71" as="sourcePoint"/><mxPoint x="316" y="71" as="targetPoint"/></mxGeometry></mxCell>
+    <mxCell id="c11" style="html=1;endArrow=block;endFill=1;strokeColor=#7a879d;strokeWidth=1.4;rounded=0;" edge="1" parent="1"><mxGeometry relative="1" as="geometry"><mxPoint x="518" y="71" as="sourcePoint"/><mxPoint x="554" y="71" as="targetPoint"/></mxGeometry></mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>

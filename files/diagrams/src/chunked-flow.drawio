@@ -1,0 +1,84 @@
+<mxfile host="app.diagrams.net">
+  <diagram name="d" id="d">
+    <mxGraphModel dx="1000" dy="600" grid="0" page="1" pageWidth="880" pageHeight="470" math="0" shadow="0">
+      <root>
+        <mxCell id="0"/><mxCell id="1" parent="0"/>
+        <mxCell id="ft" value="这一步的 chunk 能拿多少 token？—— 五级 min 漏斗（scheduler.py 的调度循环）" style="text;html=1;fontSize=14;fontColor=#333333;" vertex="1" parent="1">
+          <mxGeometry x="30" y="10" width="700" height="24" as="geometry"/>
+        </mxCell>
+        <mxCell id="f1" value="① 剩余未算的 prompt token 数&lt;br&gt;（num_tokens − num_computed_tokens）" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#eef3fd;strokeColor=#7a97d4;fontSize=12;fontColor=#333333;" vertex="1" parent="1">
+          <mxGeometry x="30" y="44" width="330" height="46" as="geometry"/>
+        </mxCell>
+        <mxCell id="f2" value="② long_prefill_token_threshold 上限&lt;br&gt;（0＝不设限；仅当批里有多个请求时生效）" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#eef3fd;strokeColor=#7a97d4;fontSize=12;fontColor=#333333;" vertex="1" parent="1">
+          <mxGeometry x="30" y="100" width="330" height="46" as="geometry"/>
+        </mxCell>
+        <mxCell id="f3" value="③ token_budget&lt;br&gt;（max_num_scheduled_tokens）" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#eef3fd;strokeColor=#7a97d4;fontSize=12;fontColor=#333333;" vertex="1" parent="1">
+          <mxGeometry x="30" y="156" width="330" height="46" as="geometry"/>
+        </mxCell>
+        <mxCell id="f4" value="④ input_budget − 草稿槽位预留&lt;br&gt;（max_num_batched_tokens − draft_slots）" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#eef3fd;strokeColor=#7a97d4;fontSize=12;fontColor=#333333;" vertex="1" parent="1">
+          <mxGeometry x="30" y="212" width="330" height="46" as="geometry"/>
+        </mxCell>
+        <mxCell id="f5" value="⑤ max_model_len − 已算 token 数&lt;br&gt;− 每步采样数（防越界）" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#eef3fd;strokeColor=#7a97d4;fontSize=12;fontColor=#333333;" vertex="1" parent="1">
+          <mxGeometry x="30" y="268" width="330" height="46" as="geometry"/>
+        </mxCell>
+        <mxCell id="mn" value="五者取最小&lt;br&gt;＝ 本步 chunk 的 token 数" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff3e0;strokeColor=#e0a04a;fontSize=13;fontColor=#333333;" vertex="1" parent="1">
+          <mxGeometry x="520" y="140" width="210" height="70" as="geometry"/>
+        </mxCell>
+        <mxCell id="e1" style="html=1;endArrow=block;endFill=1;strokeColor=#7a879d;strokeWidth=1.4;rounded=0;" edge="1" parent="1">
+          <mxGeometry relative="1" as="geometry"><mxPoint x="360" y="67" as="sourcePoint"/><mxPoint x="518" y="150" as="targetPoint"/></mxGeometry>
+        </mxCell>
+        <mxCell id="e2" style="html=1;endArrow=block;endFill=1;strokeColor=#7a879d;strokeWidth=1.4;rounded=0;" edge="1" parent="1">
+          <mxGeometry relative="1" as="geometry"><mxPoint x="360" y="123" as="sourcePoint"/><mxPoint x="518" y="158" as="targetPoint"/></mxGeometry>
+        </mxCell>
+        <mxCell id="e3" style="html=1;endArrow=block;endFill=1;strokeColor=#7a879d;strokeWidth=1.4;rounded=0;" edge="1" parent="1">
+          <mxGeometry relative="1" as="geometry"><mxPoint x="360" y="179" as="sourcePoint"/><mxPoint x="518" y="175" as="targetPoint"/></mxGeometry>
+        </mxCell>
+        <mxCell id="e4" style="html=1;endArrow=block;endFill=1;strokeColor=#7a879d;strokeWidth=1.4;rounded=0;" edge="1" parent="1">
+          <mxGeometry relative="1" as="geometry"><mxPoint x="360" y="235" as="sourcePoint"/><mxPoint x="518" y="192" as="targetPoint"/></mxGeometry>
+        </mxCell>
+        <mxCell id="e5" style="html=1;endArrow=block;endFill=1;strokeColor=#7a879d;strokeWidth=1.4;rounded=0;" edge="1" parent="1">
+          <mxGeometry relative="1" as="geometry"><mxPoint x="360" y="291" as="sourcePoint"/><mxPoint x="518" y="208" as="targetPoint"/></mxGeometry>
+        </mxCell>
+        <mxCell id="ft2" value="一个 32K 请求的 chunk 生命周期（budget = 8192）" style="text;html=1;fontSize=14;fontColor=#333333;" vertex="1" parent="1">
+          <mxGeometry x="30" y="346" width="600" height="24" as="geometry"/>
+        </mxCell>
+        <mxCell id="b1" value="新请求&lt;br&gt;prompt 32768" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#eef3fd;strokeColor=#7a97d4;fontSize=11;fontColor=#333333;" vertex="1" parent="1">
+          <mxGeometry x="30" y="380" width="118" height="60" as="geometry"/>
+        </mxCell>
+        <mxCell id="b2" value="chunk1&lt;br&gt;8192 tokens&lt;br&gt;不采样" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#eef3fd;strokeColor=#7a97d4;fontSize=11;fontColor=#333333;" vertex="1" parent="1">
+          <mxGeometry x="176" y="380" width="118" height="60" as="geometry"/>
+        </mxCell>
+        <mxCell id="b3" value="chunk2&lt;br&gt;8192&lt;br&gt;不采样" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#eef3fd;strokeColor=#7a97d4;fontSize=11;fontColor=#333333;" vertex="1" parent="1">
+          <mxGeometry x="322" y="380" width="118" height="60" as="geometry"/>
+        </mxCell>
+        <mxCell id="b4" value="chunk3&lt;br&gt;8192&lt;br&gt;不采样" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#eef3fd;strokeColor=#7a97d4;fontSize=11;fontColor=#333333;" vertex="1" parent="1">
+          <mxGeometry x="468" y="380" width="118" height="60" as="geometry"/>
+        </mxCell>
+        <mxCell id="b5" value="最后一段&lt;br&gt;7682&lt;br&gt;采样出第 1 个 token" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#e9f6ee;strokeColor=#59a97c;fontSize=11;fontColor=#333333;" vertex="1" parent="1">
+          <mxGeometry x="614" y="380" width="128" height="60" as="geometry"/>
+        </mxCell>
+        <mxCell id="b6" value="转入&lt;br&gt;decode" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#e9f6ee;strokeColor=#59a97c;fontSize=11;fontColor=#333333;" vertex="1" parent="1">
+          <mxGeometry x="770" y="380" width="90" height="60" as="geometry"/>
+        </mxCell>
+        <mxCell id="ea" style="html=1;endArrow=block;endFill=1;strokeColor=#7a879d;strokeWidth=1.4;rounded=0;" edge="1" parent="1">
+          <mxGeometry relative="1" as="geometry"><mxPoint x="148" y="410" as="sourcePoint"/><mxPoint x="174" y="410" as="targetPoint"/></mxGeometry>
+        </mxCell>
+        <mxCell id="eb" style="html=1;endArrow=block;endFill=1;strokeColor=#7a879d;strokeWidth=1.4;rounded=0;" edge="1" parent="1">
+          <mxGeometry relative="1" as="geometry"><mxPoint x="294" y="410" as="sourcePoint"/><mxPoint x="320" y="410" as="targetPoint"/></mxGeometry>
+        </mxCell>
+        <mxCell id="ec" style="html=1;endArrow=block;endFill=1;strokeColor=#7a879d;strokeWidth=1.4;rounded=0;" edge="1" parent="1">
+          <mxGeometry relative="1" as="geometry"><mxPoint x="440" y="410" as="sourcePoint"/><mxPoint x="466" y="410" as="targetPoint"/></mxGeometry>
+        </mxCell>
+        <mxCell id="ed" style="html=1;endArrow=block;endFill=1;strokeColor=#7a879d;strokeWidth=1.4;rounded=0;" edge="1" parent="1">
+          <mxGeometry relative="1" as="geometry"><mxPoint x="586" y="410" as="sourcePoint"/><mxPoint x="612" y="410" as="targetPoint"/></mxGeometry>
+        </mxCell>
+        <mxCell id="ee" style="html=1;endArrow=block;endFill=1;strokeColor=#7a879d;strokeWidth=1.4;rounded=0;" edge="1" parent="1">
+          <mxGeometry relative="1" as="geometry"><mxPoint x="742" y="410" as="sourcePoint"/><mxPoint x="768" y="410" as="targetPoint"/></mxGeometry>
+        </mxCell>
+        <mxCell id="n1" value="非最终 chunk：这一步不产出采样 token，请求标记 is_prefill_chunk；草稿提案直接丢弃（反正验证不了）" style="text;html=1;fontSize=12;fontColor=#666666;" vertex="1" parent="1">
+          <mxGeometry x="30" y="446" width="820" height="22" as="geometry"/>
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>

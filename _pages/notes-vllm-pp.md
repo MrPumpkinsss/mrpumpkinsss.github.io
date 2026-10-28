@@ -39,6 +39,9 @@ author_profile: true
   .tldr ul { margin: 6px 0 2px; padding-left: 20px; }
   .tldr li { margin-bottom: 5px; }
   html[data-theme="dark"] .tldr { background: #41321b; border-left-color: #d9a04b; }
+.diagram-fig { background:#fff; border:1px solid #ddd; border-radius:8px; padding:12px; margin:10px auto; max-width:860px; }
+.diagram-fig img { width:100%; height:auto; display:block; }
+html[data-theme="dark"] .diagram-fig { border-color:#444; }
 </style>
 
 <p>
@@ -111,44 +114,9 @@ author_profile: true
   <li><span class="i18n-zh">调度器记账、签发下一步——同时上一步可能还在 GPU 上跑（靠「batch queue」：一个攒着已签发、未完成 step 的队列，深度见下节）。</span></li>
 </ol>
 
-<svg class="dg" viewBox="0 0 860 330" role="img" aria-label="PP 流水线在飞 step 时空图">
-  <text x="16" y="22" font-size="12" class="ts">时间 →</text>
-  <text x="16" y="40" font-size="12" class="ts">T0～T5＝连续 6 个调度步（step＝排一次批 + 各级各前向一次）</text>
-  <rect x="100" y="36" width="66" height="42" rx="6" class="b"/><text x="133" y="62" text-anchor="middle" font-size="12">T0</text>
-  <rect x="190" y="36" width="66" height="42" rx="6" class="ba"/><text x="223" y="62" text-anchor="middle" font-size="12">T1</text>
-  <rect x="280" y="36" width="66" height="42" rx="6" class="bg"/><text x="313" y="62" text-anchor="middle" font-size="12">T2</text>
-  <rect x="370" y="36" width="66" height="42" rx="6" class="bb"/><text x="403" y="62" text-anchor="middle" font-size="12">T3</text>
-  <rect x="460" y="36" width="66" height="42" rx="6" class="b"/><text x="493" y="62" text-anchor="middle" font-size="12">T4</text>
-  <rect x="550" y="36" width="66" height="42" rx="6" class="ba"/><text x="583" y="62" text-anchor="middle" font-size="12">T5</text>
-  <rect x="145" y="96" width="66" height="42" rx="6" class="b"/><text x="178" y="122" text-anchor="middle" font-size="12">T0</text>
-  <rect x="235" y="96" width="66" height="42" rx="6" class="ba"/><text x="268" y="122" text-anchor="middle" font-size="12">T1</text>
-  <rect x="325" y="96" width="66" height="42" rx="6" class="bg"/><text x="358" y="122" text-anchor="middle" font-size="12">T2</text>
-  <rect x="415" y="96" width="66" height="42" rx="6" class="bb"/><text x="448" y="122" text-anchor="middle" font-size="12">T3</text>
-  <rect x="505" y="96" width="66" height="42" rx="6" class="b"/><text x="538" y="122" text-anchor="middle" font-size="12">T4</text>
-  <rect x="595" y="96" width="66" height="42" rx="6" class="ba"/><text x="628" y="122" text-anchor="middle" font-size="12">T5</text>
-  <rect x="190" y="156" width="66" height="42" rx="6" class="b"/><text x="223" y="182" text-anchor="middle" font-size="12">T0</text>
-  <rect x="280" y="156" width="66" height="42" rx="6" class="ba"/><text x="313" y="182" text-anchor="middle" font-size="12">T1</text>
-  <rect x="370" y="156" width="66" height="42" rx="6" class="bg"/><text x="403" y="182" text-anchor="middle" font-size="12">T2</text>
-  <rect x="460" y="156" width="66" height="42" rx="6" class="bb"/><text x="493" y="182" text-anchor="middle" font-size="12">T3</text>
-  <rect x="550" y="156" width="66" height="42" rx="6" class="b"/><text x="583" y="182" text-anchor="middle" font-size="12">T4</text>
-  <rect x="640" y="156" width="66" height="42" rx="6" class="ba"/><text x="673" y="182" text-anchor="middle" font-size="12">T5</text>
-  <rect x="235" y="216" width="66" height="42" rx="6" class="b"/><text x="268" y="242" text-anchor="middle" font-size="12">T0</text>
-  <rect x="325" y="216" width="66" height="42" rx="6" class="ba"/><text x="358" y="242" text-anchor="middle" font-size="12">T1</text>
-  <rect x="415" y="216" width="66" height="42" rx="6" class="bg"/><text x="448" y="242" text-anchor="middle" font-size="12">T2</text>
-  <rect x="505" y="216" width="66" height="42" rx="6" class="bb"/><text x="538" y="242" text-anchor="middle" font-size="12">T3</text>
-  <rect x="595" y="216" width="66" height="42" rx="6" class="b"/><text x="628" y="242" text-anchor="middle" font-size="12">T4</text>
-  <rect x="685" y="216" width="66" height="42" rx="6" class="ba"/><text x="718" y="242" text-anchor="middle" font-size="12">T5</text>
-  <text x="16" y="62" font-size="12">stage 0</text>
-  <text x="16" y="122" font-size="12">stage 1</text>
-  <text x="16" y="182" font-size="12">stage 2</text>
-  <text x="16" y="242" font-size="12">stage 3</text>
-  <line x1="100" y1="86" x2="770" y2="86" class="ln" stroke-dasharray="3 3"/>
-  <line x1="100" y1="146" x2="770" y2="146" class="ln" stroke-dasharray="3 3"/>
-  <line x1="100" y1="206" x2="770" y2="206" class="ln" stroke-dasharray="3 3"/>
-  <line x1="100" y1="266" x2="770" y2="266" class="ln" stroke-dasharray="3 3"/>
-  <text x="16" y="300" font-size="12" class="ts">稳态（pp_size=4）：同一时刻 4 个在飞 step 错位分布在 4 个 stage 上，每个 stage 都有活干；颜色 = step。</text>
-  <text x="16" y="319" font-size="12" class="ts">同一请求两次 decode 至少隔 pp_size 步才会再被调度（decode_stagger，见下节），避免跨 step 的 KV 写冲突。</text>
-</svg>
+<div class="diagram-fig">
+  <img src="/files/diagrams/export/pp-01-d.svg" alt="PP 流水线在飞 step 时空图">
+</div>
 
 <h2 id="decode-stagger">
   <span class="i18n-zh">decode_stagger：多个 step 并存的保险丝</span>
@@ -188,45 +156,9 @@ author_profile: true
   </tbody>
 </table>
 
-<svg class="dg" viewBox="0 0 860 210" role="img" aria-label="采样 token 两条回传路径">
-  <defs>
-    <marker id="pparr" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
-      <path d="M0,0L10,5L0,10z" class="arrp"/>
-    </marker>
-  </defs>
-  <text x="20" y="30" font-size="13">同步调度（默认 Scheduler）：</text>
-  <rect x="20" y="42" width="150" height="46" rx="8" class="b"/>
-  <text x="95" y="62" text-anchor="middle" font-size="12">末级 stage 采样</text>
-  <text x="95" y="80" text-anchor="middle" font-size="11" class="ts">ModelRunnerOutput</text>
-  <line x1="170" y1="65" x2="204" y2="65" class="ln" marker-end="url(#pparr)"/>
-  <rect x="206" y="42" width="170" height="46" rx="8" class="b"/>
-  <text x="291" y="70" text-anchor="middle" font-size="12">Executor 回引擎核心</text>
-  <line x1="376" y1="65" x2="410" y2="65" class="ln" marker-end="url(#pparr)"/>
-  <rect x="412" y="42" width="190" height="46" rx="8" class="ba"/>
-  <text x="507" y="62" text-anchor="middle" font-size="12">调度器 update_from_output</text>
-  <text x="507" y="80" text-anchor="middle" font-size="11" class="ts">记下每个请求的新 token</text>
-  <line x1="602" y1="65" x2="636" y2="65" class="ln" marker-end="url(#pparr)"/>
-  <rect x="638" y="42" width="204" height="46" rx="8" class="b"/>
-  <text x="740" y="62" text-anchor="middle" font-size="12">下一步 SchedulerOutput</text>
-  <text x="740" y="80" text-anchor="middle" font-size="11" class="ts">把 new_token_ids 带回首级</text>
-  <text x="20" y="128" font-size="13">异步调度（AsyncScheduler + MRv2）：</text>
-  <rect x="20" y="140" width="150" height="46" rx="8" class="bg"/>
-  <text x="95" y="160" text-anchor="middle" font-size="12">末级 stage 采样</text>
-  <text x="95" y="178" text-anchor="middle" font-size="11" class="ts">不等调度器</text>
-  <line x1="170" y1="163" x2="204" y2="163" class="ln" marker-end="url(#pparr)"/>
-  <rect x="206" y="140" width="220" height="46" rx="8" class="bg"/>
-  <text x="316" y="160" text-anchor="middle" font-size="12">GPU broadcast 直达首级</text>
-  <text x="316" y="178" text-anchor="middle" font-size="11" class="ts">槽位环，_pp_recv_work</text>
-  <line x1="426" y1="163" x2="460" y2="163" class="ln" marker-end="url(#pparr)"/>
-  <rect x="462" y="140" width="180" height="46" rx="8" class="b"/>
-  <text x="552" y="160" text-anchor="middle" font-size="12">首级 _prepare_input_ids</text>
-  <text x="552" y="178" text-anchor="middle" font-size="11" class="ts">等待并同步广播结果</text>
-  <line x1="642" y1="163" x2="676" y2="163" class="ln" marker-end="url(#pparr)"/>
-  <rect x="678" y="140" width="164" height="46" rx="8" class="ba"/>
-  <text x="760" y="160" text-anchor="middle" font-size="12">调度器只做对账</text>
-  <text x="760" y="178" text-anchor="middle" font-size="11" class="ts">占位符 → 真 token</text>
-  <text x="20" y="205" font-size="12" class="ts">异步路径正是 decode_stagger 的原因：调度器在 token 回来前就要签发下一步，靠占位符先记账，事后对账</text>
-</svg>
+<div class="diagram-fig">
+  <img src="/files/diagrams/export/pp-02-d.svg" alt="采样 token 两条回传路径">
+</div>
 
 <h2 id="边界与易混淆">
   <span class="i18n-zh">边界与易混淆点</span>
