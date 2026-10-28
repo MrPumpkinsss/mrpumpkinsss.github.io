@@ -24,57 +24,75 @@ author_profile: true
   html[data-theme="dark"] .dg .ln { stroke: #8a97ad; }
   html[data-theme="dark"] .dg .arrp { fill: #8a97ad; }
   .srctable { width:100%; border-collapse:collapse; margin:10px 0; }
-  .srctable th, .srctable td { border:1px solid #ddd; padding:7px 10px; font-size:0.88rem; text-align:left; }
+  .srctable th, .srctable td { border:1px solid #ddd; padding:7px 10px; font-size:0.88rem; text-align:left; vertical-align: top; }
   .srctable th { background:#f5f5f5; }
   html[data-theme="dark"] .srctable th { background:#303338; }
   html[data-theme="dark"] .srctable td { border-color:#444; }
+  .tldr {
+    border-left: 4px solid #e0a04a;
+    background: #fff8ee;
+    padding: 10px 16px;
+    border-radius: 0 8px 8px 0;
+    margin: 14px auto;
+    max-width: 800px;
+  }
+  .tldr ul { margin: 6px 0 2px; padding-left: 20px; }
+  .tldr li { margin-bottom: 5px; }
+  html[data-theme="dark"] .tldr { background: #41321b; border-left-color: #d9a04b; }
 </style>
 
 <p>
   <a href="/notes/"><span class="i18n-zh">← 返回学习目录</span><span class="i18n-en">← Back to Study Catalog</span></a>
 </p>
 
-<div class="i18n-en">
-  <p><em>English quick summary: how vLLM V1 pipelines execution under pipeline parallelism — layers are split into contiguous per-rank stages, and an engine-level batch queue keeps <strong>pp_size (+1 with async scheduling and Model Runner V2)</strong> steps in flight so stages interleave different steps' microbatches. Includes the decode_stagger ring cadence, the two sampled-token return paths, and what vLLM does NOT do (no Megatron-style virtual-stage interleaving). (Written in Chinese; based on vLLM master @ 2026-10-28.)</em></p>
+<div class="tldr">
+  <strong><span class="i18n-zh">先记住三件事</span><span class="i18n-en">TL;DR</span></strong>
+  <ul>
+    <li><span class="i18n-zh">PP 把模型按层<strong>连续切段</strong>，每个 rank 管一段；一个请求的层永远不会拆到两段。</span></li>
+    <li><span class="i18n-zh">流水线不空转的关键不是切微批，而是<strong>让 pp_size 个 step 同时在飞</strong>（异步调度 + MRv2 再多 1 个）——每个 stage 手里永远有不同的 step。</span></li>
+    <li><span class="i18n-zh">同一请求两次 decode <strong>强制间隔 ≥ pp_size 步</strong>（<code>decode_stagger</code>），对齐采样 token 的回传节奏——这是多个 step 能安全并存的根本。</span></li>
+  </ul>
 </div>
 
 <h2 id="一句话定位">
-  <span class="i18n-zh">一句话定位</span>
-  <span class="i18n-en">What it is</span>
+  <span class="i18n-zh">它是怎么「交错」的</span>
+  <span class="i18n-en">How it interleaves</span>
 </h2>
 
 <p>
-  <span class="i18n-zh">vLLM V1 的 PP（<code>--pipeline-parallel-size</code>）不是 Megatron 式的「一个 batch 切微批、1F1B 交错」，而是<strong>引擎级多 step 在飞</strong>：<code>EngineCore</code> 维护一个 batch queue，同时塞进 <code>pp_size</code>（异步调度 + MRv2 下 <code>pp_size+1</code>）个已调度但未出结果的 step；流水线各级在同一时刻处理<strong>不同 step 的批</strong>，让每个 stage 都有活干。交错发生在<strong>step 之间</strong>，同一个 step 内请求的层永远是连续切段。</span>
+  <span class="i18n-zh"><strong>白话版</strong>：一条 4 工位的流水线，如果整条线同一时刻只装一辆车，那么工位 2、3、4 大部分时间在发呆。vLLM 的做法<strong>不是把一辆车拆成四份</strong>（没有虚拟级），而是<strong>让 4 辆车同时在线上</strong>——每个工位手里永远有不同的车。所以「交错」发生在 <strong>step 之间</strong>（不同请求的批错位前进），而不是 step 之内。</span>
+</p>
+
+<p>
+  <span class="i18n-zh"><strong>源码版</strong>：这个深度不是拍脑袋——<code>VllmConfig.max_concurrent_batches</code> 的注释原话就是「<strong>PP requires PP-size concurrent batches to fill the pipeline. Async scheduling requires 2 concurrent batches to overlap.</strong>」取值：<code>PP&gt;1</code> → <code>pp_size</code>；异步调度 + MRv2 → <code>pp_size+1</code>（多出的 1 个在调度侧预备下一步）。</span>
 </p>
 
 <h2 id="静态切分">
-  <span class="i18n-zh">静态切层：连续、均匀、配平</span>
-  <span class="i18n-en">Static layer partitioning</span>
+  <span class="i18n-zh">先说切层：连续、均匀、配平</span>
+  <span class="i18n-en">Layer partitioning</span>
 </h2>
 
-<p>
-  <span class="i18n-zh"><code>get_pp_indices</code>（<code>vllm/distributed/utils.py</code>）把 <code>num_hidden_layers</code> <strong>连续均匀</strong>地分给各 rank：除不尽的余量优先摊给中间段——首段有 embedding、末段有 lm_head + norm，刻意给这两段少配一层来平衡各 stage 的峰值显存。想手动控制每段层数，用环境变量 <code>VLLM_PP_LAYER_PARTITION="20,20,20,20"</code> 指定（长度必须等于 pp_size、总和必须等于层数）。<strong>没有虚拟级 / 交错切分</strong>：一个请求的层在物理上不会被拆成两个 stage 交替执行。</span>
-</p>
+<table class="srctable">
+  <tbody>
+    <tr><td><strong><span class="i18n-zh">切法</span></strong></td><td><code>get_pp_indices</code> <span class="i18n-zh">把层<strong>连续均匀</strong>分给各 rank（48 层 pp=4 → 每段 12 层）</span></td></tr>
+    <tr><td><strong><span class="i18n-zh">配平</span></strong></td><td><span class="i18n-zh">除不尽的余量优先摊给中间段——首段带 embedding、末段带 lm_head + norm，刻意少给一层换显存平衡</span></td></tr>
+    <tr><td><strong><span class="i18n-zh">自定义</span></strong></td><td><code>VLLM_PP_LAYER_PARTITION="20,20,20,20"</code> <span class="i18n-zh">手动指定每段层数（长度须等于 pp_size）</span></td></tr>
+    <tr><td><strong><span class="i18n-zh">没有的</span></strong></td><td><span class="i18n-zh">Megatron 式虚拟级：一个请求的层不会被拆到两个 stage 交替执行</span></td></tr>
+  </tbody>
+</table>
 
 <h2 id="一步的执行">
-  <span class="i18n-zh">一步的执行：从调度到最后一级采样</span>
+  <span class="i18n-zh">一个 step 的完整旅程</span>
   <span class="i18n-en">One step, end to end</span>
 </h2>
 
-<ul>
-  <li><span class="i18n-zh">调度器只在引擎核心进程跑一次，产出 <code>SchedulerOutput</code>；Executor 通过 <code>rpc_broadcast_mq</code>（共享内存 MessageQueue）把它<strong>广播给所有 PP rank 的 worker</strong>（<code>multiproc_executor.py</code>）。</span></li>
-  <li><span class="i18n-zh">Stage 0 执行自己的层段，把 <code>intermediate_tensors</code> 通过进程组 P2P 交给 stage 1，逐级传递（<code>gpu_model_runner.py: execute_model(..., intermediate_tensors)</code>）。</span></li>
-  <li><span class="i18n-zh">最后一级做采样，<code>ModelRunnerOutput</code> 沿 executor 回到引擎核心。<code>external_launcher</code>（torchrun）后端是特例：跨 PP rank 用 GPU broadcast 同步采样输出（<code>broadcast_pp_output</code>）。</span></li>
-</ul>
-
-<h2 id="在飞深度">
-  <span class="i18n-zh">在飞深度：batch queue 才是流水线的「油」</span>
-  <span class="i18n-en">In-flight depth: the batch queue</span>
-</h2>
-
-<p>
-  <span class="i18n-zh">配置里最说明问题的一段注释（<code>VllmConfig.max_concurrent_batches</code>）：<strong>「PP requires PP-size concurrent batches to fill the pipeline. Async scheduling requires 2 concurrent batches to overlap.」</strong>取值规则：<code>PP&gt;1</code> → <code>pp_size</code>；再加异步调度且用 MRv2 → <code>pp_size+1</code>（多出的 1 个用来在调度侧预备下一步）。EngineCore 的 <code>step_with_batch_queue</code> 用一个 deque 装「已调度、未出结果」的 step：队列没满就继续 <code>schedule() → execute_model(non_block=True)</code>，满了才按 FIFO 等最早的 step 出结果。稳态下 4 级流水就是 4 个 step 同时在流水线里错位前进：</span>
-</p>
+<ol>
+  <li><span class="i18n-zh">调度器（只在引擎核心进程）产出一份 <code>SchedulerOutput</code>。</span></li>
+  <li><span class="i18n-zh">Executor 用共享内存消息队列（<code>rpc_broadcast_mq</code>）把它<strong>广播给所有 PP rank 的 worker</strong>。</span></li>
+  <li><span class="i18n-zh">Stage 0 算自己的层段，把 <code>intermediate_tensors</code> P2P 递给 stage 1，逐级传递。</span></li>
+  <li><span class="i18n-zh">最后一级采样，结果回到引擎核心（两条路径，见下节）。</span></li>
+  <li><span class="i18n-zh">调度器记账、签发下一步——同时上一步可能还在 GPU 上跑（batch queue 深度 &gt; 1 时）。</span></li>
+</ol>
 
 <svg class="dg" viewBox="0 0 860 330" role="img" aria-label="PP 流水线在飞 step 时空图">
   <text x="16" y="22" font-size="12" class="ts">时间 →</text>
@@ -116,18 +134,42 @@ author_profile: true
 </svg>
 
 <h2 id="decode-stagger">
-  <span class="i18n-zh">decode_stagger：同请求的环形节奏</span>
-  <span class="i18n-en">decode_stagger ring cadence</span>
+  <span class="i18n-zh">decode_stagger：多个 step 并存的保险丝</span>
+  <span class="i18n-en">decode_stagger</span>
 </h2>
 
 <p>
-  <span class="i18n-zh">多个 step 在飞后有个新问题：同一个请求能不能连续两步都被调度 decode？不能——它上一步的采样 token 还没回到首级。AsyncScheduler + MRv2 的解法（<code>async_scheduler.py</code>）：<code>decode_stagger = pp_size</code>，每次调度 decode 时设 <code>request.next_decode_eligible_step = current_step + pp_size</code>；<code>Scheduler.schedule()</code> 里直接跳过未到期的请求，源码注释原话：「enforce pp_size steps between same-req decodes <strong>to match worker-side sampled-tokens broadcast slot ring cadence</strong>」——即对齐 worker 侧「采样 token 广播槽位环」的节奏。副作用是天然的：每个在飞 step 携带的 decode 请求集合互不相同，恰好铺满各级流水。（XPU 平台可用 <code>VLLM_XPU_PP_MICROBATCH=0</code> 关掉，stagger 退回 1。）</span>
+  <span class="i18n-zh"><strong>问题</strong>：步和步重叠之后，如果同一个请求连续两步都被调度 decode，第二步要用的输入（上一步采样出的 token）还没从流水线末端走回来——数据竞态。</span>
+</p>
+
+<p>
+  <span class="i18n-zh"><strong>解法</strong>（<code>async_scheduler.py</code>）：记一个步号 <code>next_decode_eligible_step = 当前步 + pp_size</code>；调度时没到期的请求直接跳过。<code>Scheduler.schedule()</code> 里的注释原话：enforce pp_size steps between same-req decodes <strong>to match worker-side sampled-tokens broadcast slot ring cadence</strong>——对齐 worker 侧「采样 token 广播槽位环」的节奏。</span>
+</p>
+
+<p>
+  <span class="i18n-zh"><strong>副作用恰好是优点</strong>：每个在飞 step 携带的 decode 请求集合天然互不相同，正好铺满各级流水。XPU 平台可用 <code>VLLM_XPU_PP_MICROBATCH=0</code> 关闭（stagger 退回 1）。</span>
 </p>
 
 <h2 id="token-回传">
-  <span class="i18n-zh">采样 token 怎么回首级：两条路径</span>
+  <span class="i18n-zh">采样 token 怎么回首级：两条路</span>
   <span class="i18n-en">Sampled-token return paths</span>
 </h2>
+
+<table class="srctable">
+  <thead><tr><th></th><th><span class="i18n-zh">路径</span></th><th><span class="i18n-zh">代价</span></th></tr></thead>
+  <tbody>
+    <tr>
+      <td><strong><span class="i18n-zh">同步调度</span></strong><br><span class="i18n-zh">（默认 Scheduler）</span></td>
+      <td><span class="i18n-zh">末级采样 → Executor → 调度器 <code>update_from_output</code> → <strong>下一步的 SchedulerOutput 把 new_token_ids 带回首级</strong>（首级 worker 自己没有和末级的通信）</span></td>
+      <td><span class="i18n-zh">token 绕一圈软件栈；调度器必须等每步结果</span></td>
+    </tr>
+    <tr>
+      <td><strong><span class="i18n-zh">异步调度</span></strong><br><span class="i18n-zh">（AsyncScheduler + MRv2）</span></td>
+      <td><span class="i18n-zh">末级采样后 <strong>GPU broadcast 直达首级</strong>（<code>_pp_recv_work</code>，在 <code>_prepare_input_ids</code> 里同步等待）</span></td>
+      <td><span class="i18n-zh">调度器不等结果，先签发下一步；用占位符记账（<code>num_output_placeholders</code>、spec token 填 -1），事后对账</span></td>
+    </tr>
+  </tbody>
+</table>
 
 <svg class="dg" viewBox="0 0 860 210" role="img" aria-label="采样 token 两条回传路径">
   <defs>
@@ -166,7 +208,7 @@ author_profile: true
   <rect x="678" y="140" width="164" height="46" rx="8" class="ba"/>
   <text x="760" y="160" text-anchor="middle" font-size="12">调度器只做对账</text>
   <text x="760" y="178" text-anchor="middle" font-size="11" class="ts">占位符 → 真 token</text>
-  <text x="20" y="205" font-size="12" class="ts">异步路径正是 decode_stagger 的原因：调度器在 token 回来前就要签发下一步，靠占位符（num_output_placeholders、spec_token_ids=-1）先记账，事后对账</text>
+  <text x="20" y="205" font-size="12" class="ts">异步路径正是 decode_stagger 的原因：调度器在 token 回来前就要签发下一步，靠占位符先记账，事后对账</text>
 </svg>
 
 <h2 id="边界与易混淆">
@@ -175,11 +217,11 @@ author_profile: true
 </h2>
 
 <ul>
-  <li><strong>PCP / DCP 不是流水线</strong>：<span class="i18n-zh"><code>prefill_context_parallel_size</code>（PCP）与 <code>decode_context_parallel_size</code>（DCP）是 prefill / decode 的<strong>上下文并行</strong>（沿序列维切），和 PP 正交；本周周报里「vllm bench forward 加 PCP 支持」即是它。</span></li>
-  <li><strong>没有 Megatron 式 1F1B 虚拟级</strong>：<span class="i18n-zh">层不会拆成虚拟段交替执行；「交错」全部由多 step 在飞实现。单步内也不再切微批——torchrun 后端的高效 PP（issue #18019，已关闭）是相关历史，runner 里仍留着「Support overlapping micro-batches」的 TODO。</span></li>
-  <li><strong>V1 runner 的限制</strong>：<span class="i18n-zh">异步调度 + PP 只在 MRv2（<code>VLLM_USE_V2_MODEL_RUNNER</code>，新平台/新特性已默认）下完整支持；V1 runner 注释明说不完整。stagger 机制也只挂在 <code>use_v2_model_runner</code> 分支下。</span></li>
-  <li><strong>prefill 节流</strong>：<span class="i18n-zh">DP+PP 下有 <code>prefill_schedule_interval</code> 节奏控制与 <code>defer_prefills</code>（把 prefill chunk 挪到 cadence 对齐的 step），decode 优先填满流水。</span></li>
-  <li><strong>和 KV connector 的交集</strong>：<span class="i18n-zh">PD 分离 + PP 时，connector 握手按 (pp_rank, tp_rank) 建立通道（<code>set_xfer_handshake_metadata_pp_aware</code>，不支持 PP 分片聚合的 connector 会直接报错）。</span></li>
+  <li><strong>PCP / DCP 不是流水线</strong>：<span class="i18n-zh"><code>prefill_context_parallel_size</code> / <code>decode_context_parallel_size</code> 是沿<strong>序列维</strong>切的上下文并行，和 PP（沿层切）正交。周报里「bench forward 加 PCP 支持」说的就是它。</span></li>
+  <li><strong><span class="i18n-zh">没有 1F1B 虚拟级</span></strong>：<span class="i18n-zh">层不拆虚拟段；「交错」全部由多 step 在飞实现。单步内也不再切微批（runner 里还留着「Support overlapping micro-batches」的 TODO，对应已关闭的 issue #18019）。</span></li>
+  <li><strong><span class="i18n-zh">V1 runner 的限制</span></strong>：<span class="i18n-zh">异步调度 + PP 只在 MRv2（<code>VLLM_USE_V2_MODEL_RUNNER</code>，新平台已默认启用）下完整支持；stagger 也只挂在 <code>use_v2_model_runner</code> 分支。</span></li>
+  <li><strong><span class="i18n-zh">prefill 节流</span></strong>：<span class="i18n-zh">DP+PP 下有 <code>prefill_schedule_interval</code> 节奏控制，<code>defer_prefills</code> 把 prefill chunk 挪到 cadence 对齐的 step，decode 优先填满流水。</span></li>
+  <li><strong><span class="i18n-zh">和 KV connector 的交集</span></strong>：<span class="i18n-zh">PD 分离 + PP 时，connector 握手按 (pp_rank, tp_rank) 建通道（<code>set_xfer_handshake_metadata_pp_aware</code>，不支持 PP 分片的 connector 会直接报错）——见「<a href="/notes/vllm-kv-connector/">KV Connector 机制剖析</a>」。</span></li>
 </ul>
 
 <h2 id="源码定位">
@@ -195,7 +237,6 @@ author_profile: true
     <tr><td><span class="i18n-zh">SchedulerOutput 广播 / 结果回传</span></td><td><code>vllm/v1/executor/multiproc_executor.py: rpc_broadcast_mq</code></td></tr>
     <tr><td><span class="i18n-zh">级间 intermediate 传递、两种 token 回传</span></td><td><code>vllm/v1/worker/gpu_model_runner.py</code>（<code>sync_and_gather_intermediate_tensors</code>、<code>_pp_recv_work</code>）</td></tr>
     <tr><td><span class="i18n-zh">decode_stagger / 占位符</span></td><td><code>vllm/v1/core/sched/async_scheduler.py</code>；<code>scheduler.py</code>（<code>next_decode_eligible_step</code> 检查）</td></tr>
-    <tr><td><span class="i18n-zh">PP 感知的 connector 握手</span></td><td><code>vllm/distributed/kv_transfer/kv_connector/v1/base.py</code></td></tr>
   </tbody>
 </table>
 
