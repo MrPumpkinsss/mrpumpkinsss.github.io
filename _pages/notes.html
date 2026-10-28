@@ -6,77 +6,104 @@ author_profile: true
 ---
 
 <style>
-  .note-grid {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 16px;
-    margin: 20px auto;
-    max-width: 800px;
-  }
-  .note-card {
-    flex: 1 1 300px;
+  .cat-section {
+    background: #fff;
     border: 1px solid #ddd;
     border-radius: 8px;
-    padding: 18px 20px;
-    background: #fff;
-    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-    transition: transform 0.3s ease, box-shadow 0.3s ease;
-  }
-  .note-card:hover {
-    transform: translateY(-5px);
-    box-shadow: 0 6px 12px rgba(0,0,0,0.15);
-  }
-  .note-card h3 {
-    margin: 0 0 8px;
-    font-size: 1.4rem;
-  }
-  .note-card a {
-    text-decoration: none;
-    color: #007acc;
-  }
-  .note-table-wrap {
+    padding: 16px 22px;
+    margin: 16px auto;
     max-width: 800px;
-    margin: 20px auto;
-    overflow-x: auto;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
   }
-  .note-table {
-    width: 100%;
-    border-collapse: collapse;
-    background: #fff;
+  .cat-section h2 {
+    font-size: 1.45rem;
+    margin: 0 0 4px;
+    color: #333;
   }
-  .note-table th, .note-table td {
-    border: 1px solid #ddd;
-    padding: 10px 12px;
-    text-align: left;
-    vertical-align: top;
+  .cat-section .cat-sub {
+    color: #777;
+    font-size: 0.9rem;
+    margin: 0 0 10px;
   }
-  .note-table th {
-    background: #f5f5f5;
+  ul.cat-list { list-style: none; padding: 0; margin: 0; }
+  ul.cat-list li {
+    padding: 9px 4px;
+    border-bottom: 1px dashed #e5e5e5;
   }
+  ul.cat-list li:last-child { border-bottom: none; }
+  ul.cat-list a {
+    font-weight: 600;
+    color: #007acc;
+    text-decoration: none;
+  }
+  ul.cat-list a:hover { text-decoration: underline; }
+  .cat-tag {
+    display: inline-block;
+    font-size: 0.72rem;
+    font-weight: 600;
+    border-radius: 10px;
+    padding: 1px 9px;
+    margin-left: 6px;
+    vertical-align: 1px;
+    background: #eaf3ff;
+    color: #2a6cb3;
+    border: 1px solid #c5dcf5;
+  }
+  .cat-tag.weekly { background: #fff3e0; color: #b26a00; border-color: #f0d2a0; }
+  .cat-tag.analysis { background: #e9f6ee; color: #217a4b; border-color: #b5dfc6; }
+  .cat-desc { display: block; color: #555; font-size: 0.92rem; margin-top: 3px; }
+  html[data-theme="dark"] .cat-section { background: #26282c; border-color: #444; }
+  html[data-theme="dark"] .cat-section h2 { color: #ddd; }
+  html[data-theme="dark"] .cat-desc { color: #aaa; }
+  html[data-theme="dark"] ul.cat-list li { border-bottom-color: #3a3d42; }
+  html[data-theme="dark"] .cat-tag { background: #2b3550; color: #9fc0f0; border-color: #46597e; }
+  html[data-theme="dark"] .cat-tag.weekly { background: #41321b; color: #e0b06a; border-color: #6b5530; }
+  html[data-theme="dark"] .cat-tag.analysis { background: #1f3a2a; color: #7fd0a2; border-color: #35604a; }
+  .note-table-wrap { max-width: 800px; margin: 20px auto; overflow-x: auto; }
+  .note-table { width: 100%; border-collapse: collapse; background: #fff; }
+  .note-table th, .note-table td { border: 1px solid #ddd; padding: 10px 12px; text-align: left; vertical-align: top; }
+  .note-table th { background: #f5f5f5; }
+  html[data-theme="dark"] .note-table { background: #26282c; }
+  html[data-theme="dark"] .note-table th { background: #303338; }
 </style>
 
 <p>
-  <span class="i18n-zh">这里放我围绕研究方向的<strong>学习笔记</strong>：读论文、读源码、做实验的沉淀，持续更新中。目前从两个主流开源推理引擎 <strong>vLLM</strong> 和 <strong>SGLang</strong> 开始。</span>
-  <span class="i18n-en">Study notes around my research: what I learn from papers, source code, and experiments. Continuously updated. Currently starting with the two mainstream open-source inference engines, <strong>vLLM</strong> and <strong>SGLang</strong>.</span>
+  <span class="i18n-zh">这里是我围绕研究方向的<strong>学习目录</strong>：读论文、读源码、做实验的沉淀，按引擎分类，持续更新。</span>
+  <span class="i18n-en">My study catalog around research interests: papers, source code, and experiments, organized by engine and continuously updated.</span>
 </p>
 
-<div class="note-grid">
-  <div class="note-card">
-    <h3><a href="/notes/vllm/">vLLM</a></h3>
-    <p>
-      <span class="i18n-zh"><strong>每周追踪</strong>上游最新合入的机制：结构图 + PR 溯源；另附 PagedAttention 等背景速览。</span>
-      <span class="i18n-en">A <strong>weekly tracker</strong> of upstream mechanisms with structure diagrams and PR links, plus background primer notes.</span>
-    </p>
-    <p><a href="/notes/vllm/"><span class="i18n-zh">阅读笔记 →</span><span class="i18n-en">Read notes →</span></a></p>
-  </div>
-  <div class="note-card">
-    <h3><a href="/notes/sglang/">SGLang</a></h3>
-    <p>
-      <span class="i18n-zh">以 RadixAttention 前缀复用和低调度开销著称的引擎：基数树 KV cache、overlap scheduler、结构化输出与 EAGLE 投机解码。</span>
-      <span class="i18n-en">The engine known for RadixAttention prefix reuse and low scheduling overhead: radix-tree KV cache, overlap scheduler, structured outputs, and EAGLE speculative decoding.</span>
-    </p>
-    <p><a href="/notes/sglang/"><span class="i18n-zh">阅读笔记 →</span><span class="i18n-en">Read notes →</span></a></p>
-  </div>
+<div class="cat-section">
+  <h2><span class="i18n-zh">vLLM</span><span class="i18n-en">vLLM</span></h2>
+  <p class="cat-sub"><span class="i18n-zh">高吞吐推理引擎（PagedAttention 系）</span><span class="i18n-en">The high-throughput serving engine (PagedAttention family)</span></p>
+  <ul class="cat-list">
+    <li>
+      <a href="/notes/vllm/"><span class="i18n-zh">每周机制追踪</span><span class="i18n-en">Weekly mechanism tracker</span></a>
+      <span class="cat-tag weekly"><span class="i18n-zh">周报</span><span class="i18n-en">weekly</span></span>
+      <span class="cat-desc"><span class="i18n-zh">每周一篇：读上游最新合入的 PR，挑新机制画结构图讲清楚；另附 PagedAttention 等背景速览。</span><span class="i18n-en">Weekly digest of newly merged upstream mechanisms with diagrams and PR links, plus a background primer.</span></span>
+    </li>
+    <li>
+      <a href="/notes/vllm-kv-connector/"><span class="i18n-zh">KV Connector 机制剖析</span><span class="i18n-en">KV Connector internals</span></a>
+      <span class="cat-tag analysis"><span class="i18n-zh">源码剖析</span><span class="i18n-en">source</span></span>
+      <span class="cat-desc"><span class="i18n-zh">双角色接口（调度器 / worker）、PD 分离与 KV 卸载的数据流、16 个内置实现与选型。</span><span class="i18n-en">The dual-role interface (scheduler / worker), P2D data flow, and the 16 built-in implementations.</span></span>
+    </li>
+    <li>
+      <a href="/notes/vllm-pp/"><span class="i18n-zh">PP 流水线交错执行</span><span class="i18n-en">PP pipeline interleaving</span></a>
+      <span class="cat-tag analysis"><span class="i18n-zh">源码剖析</span><span class="i18n-en">source</span></span>
+      <span class="cat-desc"><span class="i18n-zh">batch queue 让 pp_size(+1) 个 step 在飞、decode_stagger 环形节奏、采样 token 的两条回传路径。</span><span class="i18n-en">The batch queue keeping pp_size(+1) steps in flight, the decode_stagger ring cadence, and the two sampled-token return paths.</span></span>
+    </li>
+  </ul>
+</div>
+
+<div class="cat-section">
+  <h2><span class="i18n-zh">SGLang</span><span class="i18n-en">SGLang</span></h2>
+  <p class="cat-sub"><span class="i18n-zh">RadixAttention 系推理引擎</span><span class="i18n-en">The RadixAttention-family engine</span></p>
+  <ul class="cat-list">
+    <li>
+      <a href="/notes/sglang/"><span class="i18n-zh">SGLang 笔记</span><span class="i18n-en">SGLang notes</span></a>
+      <span class="cat-tag analysis"><span class="i18n-zh">入门</span><span class="i18n-en">primer</span></span>
+      <span class="cat-desc"><span class="i18n-zh">RadixAttention 前缀复用、overlap scheduler、结构化输出与 EAGLE 投机解码。</span><span class="i18n-en">RadixAttention prefix reuse, overlap scheduler, structured outputs, and EAGLE speculative decoding.</span></span>
+    </li>
+  </ul>
 </div>
 
 <h2>
@@ -116,7 +143,7 @@ author_profile: true
     </tr>
     <tr>
       <td><span class="i18n-zh">投机解码</span><span class="i18n-en">Speculative decoding</span></td>
-      <td>ngram / draft model / Medusa / EAGLE</td>
+      <td>ngram / draft model / Medusa / EAGLE / DSpark / DFlash</td>
       <td>EAGLE <span class="i18n-zh">系列</span><span class="i18n-en">family</span> / ngram</td>
     </tr>
     <tr>

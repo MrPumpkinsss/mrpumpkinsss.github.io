@@ -25,7 +25,9 @@
     'My RPI':        { zh: '我的树莓派',      en: 'My RPI' },
     'Study Notes':   { zh: '学习笔记',        en: 'Study Notes' },
     'vLLM':          { zh: 'vLLM 学习笔记',   en: 'vLLM Study Notes' },
-    'SGLang':        { zh: 'SGLang 学习笔记', en: 'SGLang Study Notes' }
+    'SGLang':        { zh: 'SGLang 学习笔记', en: 'SGLang Study Notes' },
+    'KV Connector':  { zh: 'KV Connector 机制剖析', en: 'KV Connector Internals' },
+    'PP Interleaving': { zh: 'PP 流水线交错执行',   en: 'PP Pipeline Interleaving' }
   };
 
   function currentLang() {
