@@ -154,8 +154,8 @@ author_profile: true
     </tr>
     <tr>
       <td><strong><span class="i18n-zh">草稿 KV cache</span></strong></td>
-      <td><span class="i18n-zh">草稿自己的层各自缓存草稿 token 的 KV（草稿是独立小模型 / EAGLE 头有自己的注意力）</span></td>
-      <td><span class="i18n-zh">独立小模型草稿：滚动回退到「上轮起草起点」重写；基于目标隐状态的起草（EAGLE/MTP）：同样在草稿 cache 上做截断回写</span></td>
+      <td><span class="i18n-zh">草稿自己的层各自缓存草稿 token 的 KV（独立小模型 / EAGLE 头有自己的注意力）</span></td>
+      <td><span class="i18n-zh">被接受的 m 个草稿条目<strong>仍然有效</strong>；只对被拒的 k−m 条做<strong>逻辑回退</strong>（<code>seq_lens -= num_rejected_tokens</code>、槽位打掩码，不搬数据），下轮起草的 step-0 在原槽位原地重写，并把新采样的 bonus/重采 token 补进草稿链</span></td>
     </tr>
     <tr>
       <td><strong><span class="i18n-zh">隐藏状态</span></strong></td>
@@ -164,6 +164,15 @@ author_profile: true
     </tr>
   </tbody>
 </table>
+
+<h3 id="草稿-kv-回退的精确含义">
+  <span class="i18n-zh">「回退」的精确含义与开销</span>
+  <span class="i18n-en">What rollback actually means</span>
+</h3>
+
+<p>
+  <span class="i18n-zh">以独立小模型为例（vLLM <code>llm_base_proposer.py</code>）：验证接受 m 个、拒绝 k−m 个后，草稿 KV 里<strong>只有被拒的 k−m 个条目失效</strong>（序列在那之后分叉），接受前缀的条目依然有效；新采样的 bonus/重采 token 则还没有草稿 KV。回退本身是<strong>逻辑的、零数据搬运</strong>：<code>seq_lens -= num_rejected_tokens_gpu</code> + 被拒槽位打掩码（slot 置 −1）。下一轮起草的 step-0 first pass 把上轮 k+1 个位置整体重放一遍（输入左移一位、末位插入新采样 token，被拒槽位原地重写）——这次前向每轮本来就要跑，其中被拒 (k−m) 个位置是必要的重写，接受 m 个位置是确定性冗余重算（保证 batched 形状统一、CUDA graph 友好），真正的增量只有新采样那 1 个 token 的小模型前向。EAGLE 系更省：hidden states 直接从目标验证前向接力（<code>hidden_states[:] = target_hidden_states</code>），连草稿隐状态的重算都省了。「物理回退 + 从头重放整条前缀」（每轮多 m+1 个位置 + 块级搬移）是朴素实现的做法，vLLM 避开了。</span>
+</p>
 
 <h2 id="hidden-states-流动">
   <span class="i18n-zh">hidden states 在大小模型之间的流动</span>
