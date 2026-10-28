@@ -27,7 +27,8 @@
     'vLLM':          { zh: 'vLLM 学习笔记',   en: 'vLLM Study Notes' },
     'SGLang':        { zh: 'SGLang 学习笔记', en: 'SGLang Study Notes' },
     'KV Connector':  { zh: 'KV Connector 机制剖析', en: 'KV Connector Internals' },
-    'PP Interleaving': { zh: 'PP 流水线交错执行',   en: 'PP Pipeline Interleaving' }
+    'PP Interleaving': { zh: 'PP 流水线交错执行',   en: 'PP Pipeline Interleaving' },
+    'Speculative Decoding': { zh: '投机解码机制细节', en: 'Speculative Decoding Mechanics' }
   };
 
   function currentLang() {
