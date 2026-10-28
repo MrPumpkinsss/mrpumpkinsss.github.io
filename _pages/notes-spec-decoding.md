@@ -74,6 +74,8 @@ html[data-theme="dark"] .diagram-fig { border-color:#444; }
     <tr><td><strong><span class="i18n-zh">接受率</span> α</strong></td><td><span class="i18n-zh">草稿 token 平均被接受的比例（0～1）</span></td></tr>
     <tr><td><strong>bonus token</strong></td><td><span class="i18n-zh">k 个草稿全部被接受后，目标模型从最后一位分布里多采的那 1 个 token（白送的）</span></td></tr>
     <tr><td><strong><span class="i18n-zh">自回归</span></strong></td><td><span class="i18n-zh">一个一个往右生成：每出新 token 都把它当输入接着出下一个</span></td></tr>
+    <tr><td><strong><span class="i18n-zh">因果掩码</span>（causal mask）</strong></td><td><span class="i18n-zh">标准 decode 的注意力规则：每个位置只能看它自己和之前的位置</span></td></tr>
+    <tr><td><strong>tree mask（<span class="i18n-zh">树注意力掩码</span>）</strong></td><td><span class="i18n-zh">树形草稿验证用的一张 0/1 矩阵：在因果掩码之上按树的父子关系放开格子，让每个候选节点只看自己的祖先链</span></td></tr>
     <tr><td><strong>EAGLE / MTP / Medusa</strong></td><td><span class="i18n-zh">三类「借大模型隐状态出草稿」的方案名，正文有对比表</span></td></tr>
     <tr><td><strong>first pass</strong></td><td><span class="i18n-zh">每轮起草的第一个前向：把上轮位置重放一遍，让草稿模型的隐状态和 KV 接上</span></td></tr>
     <tr><td><strong>TP / rank</strong></td><td>TP＝<span class="i18n-zh">张量并行（一层切到多卡算）；rank＝卡/进程在并行组里的编号</span></td></tr>
@@ -129,6 +131,40 @@ html[data-theme="dark"] .diagram-fig { border-color:#444; }
   <li><span class="i18n-zh">工程实现里验证还要带上采样约束：vLLM 的 <code>RejectionSampler</code> 把 min_tokens、重复惩罚、bad words、top-k/top-p 全部应用在草稿验证上，保证带约束解码也分布无损。</span></li>
 </ul>
 
+<h2 id="树形草稿与-tree-mask">
+  <span class="i18n-zh">树形草稿与 tree mask</span>
+  <span class="i18n-en">Tree drafts &amp; the tree mask</span>
+</h2>
+
+<p>
+  <span class="i18n-zh"><strong>白话版</strong>：链式草稿是「一条路赌到底」——第 2 个猜测依赖第 1 个，猜错一步后面全废。树形草稿（Medusa、树版 EAGLE）每层岔开猜<strong>多条路</strong>，然后把整棵候选树<strong>一次前向全部验证</strong>。能做到这一点靠的是 <strong>tree mask（树注意力掩码）</strong>：一张 0/1 矩阵，规定验证前向中每个候选位置允许注意哪些位置——在标准因果掩码之上，按树的父子关系放开格子。效果：每个节点只「看见」自己的祖先链，因果性不被破坏，但所有路径的分布<strong>并行</strong>产出。</span>
+</p>
+
+<div class="diagram-fig">
+  <img src="/files/diagrams/export/spec-03-d.svg" alt="树形草稿：候选树与对应的 tree mask 矩阵，接受路径为 0→2→6">
+</div>
+
+<p>
+  <span class="i18n-zh"><strong>接受规则与状态管理</strong>：</span>
+</p>
+
+<ul>
+  <li><span class="i18n-zh">验证仍按逐位拒绝采样（min(1, p/q)），但「逐位」沿树的路径走：最后取<strong>最长的全接受路径</strong>，在该末端节点按目标分布多采 1 个 bonus——本步结束。</span></li>
+  <li><span class="i18n-zh">被拒分支的草稿 KV 按<strong>接受路径裁剪</strong>：兄弟节点在 cache 里位置相邻，裁剪是连续段；接受路径上的节点 KV 有效，下一轮起草直接续用。</span></li>
+  <li><span class="i18n-zh"><strong>代价</strong>：tree mask 打破了规则形状（每个请求的树都不同，要 padding），需要专门的树注意力 kernel（比标准因果 mask 慢），CUDA graph 兼容性也更麻烦。</span></li>
+</ul>
+
+<h3 id="引擎现状">
+  <span class="i18n-zh">引擎现状（源码核实）</span>
+  <span class="i18n-en">Engine status</span>
+</h3>
+
+<ul>
+  <li><span class="i18n-zh">vLLM V1 主线是<strong>线性链草稿</strong>：EAGLE / DSpark 每步沿一条链起草（配置注释里明确写着 non-tree speculation）；树形验证未进入 V1 主线，要用需要自定义 attention backend 传入自定义 mask。</span></li>
+  <li><span class="i18n-zh">Medusa 的树注意力是 V0 时代的实现，<strong>未迁入 V1</strong>（V1 的 <code>SpeculativeMethod</code> 列表里没有 medusa）。</span></li>
+  <li><span class="i18n-zh">SGLang 的 EAGLE 支持树形验证——想实际跑树形草稿，它是更省事的选择。</span></li>
+</ul>
+
 <h2 id="状态管理">
   <span class="i18n-zh">状态管理：三套状态怎么回退（工程难点）</span>
   <span class="i18n-en">State management: the engineering hard part</span>
@@ -180,7 +216,7 @@ html[data-theme="dark"] .diagram-fig { border-color:#444; }
     <tr><td><strong><span class="i18n-zh">独立草稿小模型</span></strong></td><td><span class="i18n-zh">草稿自己的 hidden states，自回归 k 次</span></td><td><span class="i18n-zh">与目标模型无关，两套 KV 独立维护</span></td></tr>
     <tr><td><strong>EAGLE / EAGLE-3</strong></td><td><span class="i18n-zh">草稿头在<strong>特征级</strong>自回归</span></td><td><span class="i18n-zh">草稿头消费<strong>目标模型的 hidden state</strong>：输入 = 目标 last hidden state（EAGLE-3 还拼接若干中间层的辅助隐状态 aux hidden states，经全连接层投影融合）+ 下一 token 的 embedding → 预测再下一个 token</span></td></tr>
     <tr><td><strong>MTP</strong>（Multi-Token Prediction，<span class="i18n-zh">DeepSeek-V3 引入的多 token 预测</span>）</td><td><span class="i18n-zh">附加的 MTP 模块一次预测多步</span></td><td><span class="i18n-zh">输入 = 目标 hidden state + 下一 token embedding；每个深度一个 MTP 模块，有自己的 embedding / 投影 / 头</span></td></tr>
-    <tr><td><strong>Medusa / 多头</strong></td><td><span class="i18n-zh">目标骨干上的多个解码头 + 树注意力</span></td><td><span class="i18n-zh">头直接挂在目标顶层 hidden state 上，无独立草稿模型</span></td></tr>
+    <tr><td><strong>Medusa / <span class="i18n-zh">多头</span></strong></td><td><span class="i18n-zh">目标骨干上的多个解码头 + 树注意力（树形草稿见下文专节）</span></td><td><span class="i18n-zh">头直接挂在目标顶层 hidden state 上，无独立草稿模型</span></td></tr>
     <tr><td><strong>LayerSkip / 自投机</strong></td><td><span class="i18n-zh">用目标模型前几层提前退出</span></td><td><span class="i18n-zh">早期层的 hidden states 就是草稿信号，同一套权重</span></td></tr>
   </tbody>
 </table>
