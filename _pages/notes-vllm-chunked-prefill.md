@@ -96,7 +96,16 @@ author_profile: true
 </h2>
 
 <div class="diagram-fig">
-  <img src="/files/diagrams/export/chunked-flow-d.svg" alt="chunk 大小由五级 min 预算漏斗决定，以及一个 32K 请求的 chunk 生命周期">
+  <img src="/files/diagrams/export/chunked-funnel-d.svg" alt="五级 min 预算漏斗：剩余量 32768 依次被 long_prefill 上限 16384、token_budget 8192 削小，input_budget 与 max_model_len 余量未触发，出口 8192 即本步 chunk 大小">
+</div>
+
+<p>
+  <span class="i18n-zh">漏斗出口的数落到一个具体请求头上，就是一个 chunk 的生命周期：</span>
+  <span class="i18n-en">Once the funnel emits a number, a request's life as chunks looks like this:</span>
+</p>
+
+<div class="diagram-fig">
+  <img src="/files/diagrams/export/chunked-flow-d.svg" alt="一个 32K 请求的 chunk 生命周期：三段 8192 不采样，最后一段 7682 采样出第 1 个 token 后转入 decode">
 </div>
 
 <p>

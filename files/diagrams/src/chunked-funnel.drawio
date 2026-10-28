@@ -1,0 +1,81 @@
+<mxfile host="app.diagrams.net">
+  <diagram name="d" id="d">
+    <mxGraphModel dx="1000" dy="600" grid="0" page="1" pageWidth="880" pageHeight="470" math="0" shadow="0">
+      <root>
+        <mxCell id="0"/><mxCell id="1" parent="0"/>
+        <mxCell id="t1" value="五级 min 预算漏斗：本步 chunk 大小是怎么被削出来的" style="text;html=1;fontSize=14;fontColor=#333333;" vertex="1" parent="1">
+          <mxGeometry x="30" y="10" width="820" height="24" as="geometry"/>
+        </mxCell>
+        <mxCell id="t2" value="示例：32K prompt 第一步 · token_budget = 8192 · max_model_len = 40960 · 批里有其他请求（② 生效）· 未开投机解码（草稿槽位 = 0）" style="text;html=1;fontSize=11;fontColor=#666666;" vertex="1" parent="1">
+          <mxGeometry x="30" y="34" width="820" height="18" as="geometry"/>
+        </mxCell>
+        <mxCell id="l1" value="① 剩余量&lt;br&gt;num_tokens − num_computed = 32768" style="text;html=1;fontSize=11;fontColor=#333333;" vertex="1" parent="1">
+          <mxGeometry x="30" y="66" width="210" height="40" as="geometry"/>
+        </mxCell>
+        <mxCell id="b1" value="32768" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#eef3fd;strokeColor=#7a97d4;fontSize=13;fontColor=#333333;" vertex="1" parent="1">
+          <mxGeometry x="250" y="62" width="600" height="40" as="geometry"/>
+        </mxCell>
+        <mxCell id="a1" value="▼ min" style="text;html=1;fontSize=10;fontColor=#999999;" vertex="1" parent="1">
+          <mxGeometry x="250" y="104" width="80" height="16" as="geometry"/>
+        </mxCell>
+        <mxCell id="l2" value="② long_prefill 上限&lt;br&gt;long_prefill_token_threshold = 16384" style="text;html=1;fontSize=11;fontColor=#333333;" vertex="1" parent="1">
+          <mxGeometry x="30" y="124" width="210" height="36" as="geometry"/>
+        </mxCell>
+        <mxCell id="b2" value="16384" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#eef3fd;strokeColor=#7a97d4;fontSize=12;fontColor=#333333;" vertex="1" parent="1">
+          <mxGeometry x="250" y="124" width="300" height="36" as="geometry"/>
+        </mxCell>
+        <mxCell id="g2" value="被削掉 16384（防长 prompt 饿死别人）" style="rounded=1;whiteSpace=wrap;html=1;dashed=1;fillColor=#f7f7f9;strokeColor=#b9bcc4;fontSize=10;fontColor=#8a8f99;" vertex="1" parent="1">
+          <mxGeometry x="550" y="124" width="300" height="36" as="geometry"/>
+        </mxCell>
+        <mxCell id="a2" value="▼ min" style="text;html=1;fontSize=10;fontColor=#999999;" vertex="1" parent="1">
+          <mxGeometry x="250" y="162" width="80" height="16" as="geometry"/>
+        </mxCell>
+        <mxCell id="l3" value="③ token_budget&lt;br&gt;max_num_scheduled_tokens = 8192" style="text;html=1;fontSize=11;fontColor=#333333;" vertex="1" parent="1">
+          <mxGeometry x="30" y="182" width="210" height="36" as="geometry"/>
+        </mxCell>
+        <mxCell id="b3" value="8192" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#eef3fd;strokeColor=#7a97d4;fontSize=12;fontColor=#333333;" vertex="1" parent="1">
+          <mxGeometry x="250" y="182" width="150" height="36" as="geometry"/>
+        </mxCell>
+        <mxCell id="g3" value="被削掉 8192（本步全局 token 预算上限）" style="rounded=1;whiteSpace=wrap;html=1;dashed=1;fillColor=#f7f7f9;strokeColor=#b9bcc4;fontSize=10;fontColor=#8a8f99;" vertex="1" parent="1">
+          <mxGeometry x="400" y="182" width="450" height="36" as="geometry"/>
+        </mxCell>
+        <mxCell id="a3" value="▼ min" style="text;html=1;fontSize=10;fontColor=#999999;" vertex="1" parent="1">
+          <mxGeometry x="250" y="220" width="80" height="16" as="geometry"/>
+        </mxCell>
+        <mxCell id="l4" value="④ input_budget − 草稿槽位&lt;br&gt;max_num_batched_tokens − 0 = 8192" style="text;html=1;fontSize=11;fontColor=#333333;" vertex="1" parent="1">
+          <mxGeometry x="30" y="240" width="210" height="36" as="geometry"/>
+        </mxCell>
+        <mxCell id="b4" value="8192" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#eef3fd;strokeColor=#7a97d4;fontSize=12;fontColor=#333333;" vertex="1" parent="1">
+          <mxGeometry x="250" y="240" width="150" height="36" as="geometry"/>
+        </mxCell>
+        <mxCell id="p4" value="未削：8192 ≥ 8192，刚好不削" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#e9f6ee;strokeColor=#59a97c;fontSize=11;fontColor=#333333;" vertex="1" parent="1">
+          <mxGeometry x="400" y="240" width="450" height="36" as="geometry"/>
+        </mxCell>
+        <mxCell id="a4" value="▼ min" style="text;html=1;fontSize=10;fontColor=#999999;" vertex="1" parent="1">
+          <mxGeometry x="250" y="278" width="80" height="16" as="geometry"/>
+        </mxCell>
+        <mxCell id="l5" value="⑤ max_model_len 余量&lt;br&gt;40960 − 已算 0 − 采样 1 = 40959" style="text;html=1;fontSize=11;fontColor=#333333;" vertex="1" parent="1">
+          <mxGeometry x="30" y="298" width="210" height="36" as="geometry"/>
+        </mxCell>
+        <mxCell id="b5" value="8192" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#eef3fd;strokeColor=#7a97d4;fontSize=12;fontColor=#333333;" vertex="1" parent="1">
+          <mxGeometry x="250" y="298" width="150" height="36" as="geometry"/>
+        </mxCell>
+        <mxCell id="p5" value="未削：40959 ≥ 8192" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#e9f6ee;strokeColor=#59a97c;fontSize=11;fontColor=#333333;" vertex="1" parent="1">
+          <mxGeometry x="400" y="298" width="450" height="36" as="geometry"/>
+        </mxCell>
+        <mxCell id="a5" value="▼ 出口" style="text;html=1;fontSize=10;fontColor=#999999;" vertex="1" parent="1">
+          <mxGeometry x="250" y="336" width="80" height="16" as="geometry"/>
+        </mxCell>
+        <mxCell id="ex" value="min(32768, 16384, 8192, 8192, 40959) = 8192 —— 本步就调度 8192 个 token" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#e9f6ee;strokeColor=#59a97c;fontSize=13;fontColor=#333333;" vertex="1" parent="1">
+          <mxGeometry x="250" y="356" width="600" height="44" as="geometry"/>
+        </mxCell>
+        <mxCell id="n1" value="没到 prompt 末尾 → 非最终 chunk：本步不采样，请求标记 is_prefill_chunk 等下一轮" style="text;html=1;fontSize=11;fontColor=#666666;" vertex="1" parent="1">
+          <mxGeometry x="250" y="404" width="600" height="18" as="geometry"/>
+        </mxCell>
+        <mxCell id="lg" value="图例：蓝色实心＝削完剩下的量 · 灰色虚线＝被该级削掉的量 · 绿色＝该级未触发 · ▼ min＝逐级取最小（每过一级 v ← min(v, 上限)）" style="text;html=1;fontSize=11;fontColor=#666666;" vertex="1" parent="1">
+          <mxGeometry x="30" y="432" width="820" height="20" as="geometry"/>
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>
