@@ -118,17 +118,12 @@ html[data-theme="dark"] .diagram-fig { border-color:#444; }
   <img src="/files/diagrams/export/pp-01-d.svg" alt="PP 流水线在飞 step 时空图">
 </div>
 
-<h3 id="faq-batch">
-  <span class="i18n-zh">常见疑问：pp=N 就是「N 个固定 batch」？请求怎么分进 batch？</span>
-  <span class="i18n-en">FAQ: is pp=N a fixed number of batches?</span>
-</h3>
-
 <p>
-  <span class="i18n-zh">不是固定分组。整个引擎只有<strong>一个调度器</strong>和<strong>一条 running 队列</strong>（默认先来先服务，FCFS）；每个 step 的 batch 就是「这一步从队列头部往后扫、能塞进 token 预算的那批请求」。pp=N 的含义是<strong>这样的 step 同时有 N 个在流水线里错位执行</strong>——是时间上的重叠，不是把请求分成 N 组。请求也<strong>不归属任何 stage</strong>：每个 step 的 batch 会依次流过全部 stage，各 stage 算的是同一批请求的不同层段。</span>
+  <span class="i18n-zh">这里有个容易误解的点：pp=N 并不是说引擎里存在「N 个固定的 batch」，请求也不是预先分成 N 组。整个引擎只有<strong>一个调度器</strong>和<strong>一条 running 队列</strong>（默认先来先服务，FCFS）；每个 step 的 batch，就是「这一步从队列头部往后扫、能塞进 token 预算的那批请求」。所谓 N 个在飞 batch，是<strong>这样的 step 同时有 N 个在流水线里错位执行</strong>——时间上的重叠，不是空间上的分组。请求也不归属任何 stage：每个 batch 会依次流过全部 stage，各 stage 算的是同一批请求的不同层段。</span>
 </p>
 
 <p>
-  <span class="i18n-zh">请求进 batch 的具体规则（<code>scheduler.py</code> 的 running 循环）：按 running 队列顺序扫描，跳过未到期（decode_stagger）、被 defer 或块分配失败的请求，剩余 token 预算装得下多少就装多少；新请求从 waiting 队列按 FCFS 追加到 running 尾部。同步调度下 decode 请求<strong>每个 step 都在 batch 里</strong>（上一步采样的 token 由调度器转交进下一步）；异步 + MRv2 下同请求强制隔 pp_size 步（decode_stagger），于是 N 个在飞 batch 的 decode 请求集合天然互不相同。</span>
+  <span class="i18n-zh">请求怎么进 batch：调度器按 running 队列顺序扫描，跳过未到期（decode_stagger）、被 defer 或块分配失败的请求，剩余 token 预算装得下多少就装多少；新请求从 waiting 队列按 FCFS 追加到 running 尾部。同步调度下 decode 请求<strong>每个 step 都在 batch 里</strong>——上一步采样的 token 由调度器转交进下一步的 <code>SchedulerOutput</code>；异步 + MRv2 下同一请求强制隔 pp_size 步才再进（decode_stagger），于是 N 个在飞 batch 的 decode 请求集合天然互不相同。</span>
 </p>
 
 <h2 id="decode-stagger">
