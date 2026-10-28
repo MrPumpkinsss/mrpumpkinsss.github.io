@@ -68,7 +68,7 @@ author_profile: true
 <h3 id="av-triton">1 · 自适应验证的「草稿预算选择」内核化 · <a href="https://github.com/vllm-project/vllm/pull/63421">#63421</a></h3>
 
 <p>
-  <span class="i18n-zh"><strong>自适应验证（Adaptive Verification, AV）</strong>是投机解码里每步<strong>动态决定草稿多少个 token</strong>的机制：预算 k′ 随上一步的接受情况变化，而不是固定草稿深度。问题在于预算选择原来用 <code>torch.compile(dynamic=True)</code> 实现——serving 中途会现场编译 4–5 个 Dynamo 图（每进程卡 1.8–4.7 秒），且每个预算绑定步的 host 开销高达 76–90µs。本 PR 把预算选择换成<strong>单次启动的 Triton 内核</strong>，warmup 时一次性 JIT：serving 中不再有编译，host 开销 ~15µs（约 6×），GPU 端 85–100µs → 22–30µs。实测 Qwen3-4B + DSpark、GSM8K、并发 16（H200）：4,783 → 6,803 tok/s（+42%），精度不变。</span>
+  <span class="i18n-zh"><strong>自适应验证（Adaptive Verification, AV）</strong>是投机解码里每步<strong>动态决定草稿多少个 token</strong>的机制：预算 k′ 随上一步的接受情况变化，而不是固定草稿深度。问题在于预算选择原来用 <code>torch.compile(dynamic=True)</code> 实现——serving 中途会现场编译 4–5 个 Dynamo 图（每进程卡 1.8–4.7 秒），且每个预算绑定步的 host 开销高达 76–90µs。本 PR 把预算选择换成<strong>单次启动的 Triton 内核</strong>（Triton＝用 Python 写 GPU kernel 的编译工具），warmup（预热）时一次性 JIT（即时编译）：serving 中不再有编译，host 开销 ~15µs（约 6×），GPU 端 85–100µs → 22–30µs。实测 Qwen3-4B + DSpark（一种草稿模型方案）、GSM8K 数据集、并发 16（H200）：4,783 → 6,803 tok/s（每秒生成 token 数；+42%），精度不变。</span>
 </p>
 
 <svg class="dg" viewBox="0 0 860 236" role="img" aria-label="自适应验证闭环结构图">
@@ -221,11 +221,11 @@ author_profile: true
 </h3>
 
 <ul>
-  <li><strong>MRv2 基建</strong>：<a href="https://github.com/vllm-project/vllm/pull/63633">#63633</a> — StagedWriteTensor 按<strong>引用 staging + UVA 直读</strong>：numpy / array.array 零拷贝进 UVA buffer，写内核对 GPU 侧目标也走 UVA，mrope positions 的 stage+apply 从 4–13ms 降到 ~65µs（GB200）。</li>
+  <li><strong>MRv2（Model Runner V2）<span class="i18n-zh">基建</span></strong>：<a href="https://github.com/vllm-project/vllm/pull/63633">#63633</a> — StagedWriteTensor 按<strong>引用 staging + UVA 直读</strong>：numpy / array.array 零拷贝进 UVA buffer，写内核对 GPU 侧目标也走 UVA，mrope positions 的 stage+apply 从 4–13ms 降到 ~65µs（GB200）。</li>
   <li><strong>KV Offload P2P 提速失败判定</strong>：<a href="https://github.com/vllm-project/vllm/pull/63781">#63781</a> — 卡死对端的故障判定从 ~40s 压到 ~15s（symmetric-P2P load 30→10s、abort-ack 10→5s、lookup 无进展 30→8s；PD 负载保留 30s 给完整 prefill），失败后本地重算。</li>
   <li><strong>Rust 前端对齐周</strong>：<a href="https://github.com/vllm-project/vllm/pull/63313">#63313</a>–<a href="https://github.com/vllm-project/vllm/pull/63318">#63318</a> 等 8+ 个 PR，把 Rust 版 API server 的行为逐项对齐 Python 前端（bad words、logit_bias 校验、LoRA、Mooncake 指标……）。</li>
   <li><strong>退役</strong>：结构化输出后端 <strong>LM Format Enforcer</strong> 被弃用（<a href="https://github.com/vllm-project/vllm/pull/63423">#63423</a>）；实验性的 <strong>vLLM IR</strong> 开始做移除前的清理（<a href="https://github.com/vllm-project/vllm/pull/63371">#63371</a>）。</li>
-  <li><strong>生态</strong>：NIXL 升 1.5.1（<a href="https://github.com/vllm-project/vllm/pull/63817">#63817</a>）；DeepGEMM MegaMoE、AgentX 调优 preset（Kimi-K3 / DeepSeek-V4.1 / MiniMax-M3 系列 recipe）持续滚动。</li>
+  <li><strong>生态</strong>：NIXL（NVIDIA 的 KV 传输库）升 1.5.1（<a href="https://github.com/vllm-project/vllm/pull/63817">#63817</a>）；DeepGEMM MegaMoE、AgentX 调优 preset（AgentX＝官方部署调优预设体系；preset / recipe＝针对「模型 × 硬件」预先调好的参数组合；Kimi-K3 / DeepSeek-V4.1 / MiniMax-M3 等型号持续更新）。</li>
 </ul>
 
 <h2 id="archive">
@@ -252,7 +252,7 @@ vLLM 由 UC Berkeley 开源，凭借 <strong>PagedAttention</strong> 一战成�
 - <strong>Automatic Prefix Caching（APC）</strong>：对每个 KV block 按内容哈希，相同前缀的请求直接复用已算好的 KV（新版本默认开启）。
 - <strong>Chunked prefill</strong>：超长 prompt 的 prefill 切成多个 chunk 与 decode 混批，避免一个长请求阻塞其他请求的时延。
 - <strong>投机解码</strong>：内置 ngram、draft model、Medusa、EAGLE、DSpark、DFlash 等方案，以及自适应验证（AV）等增强——本页周报持续追踪这块。
-- <strong>量化与并行</strong>：FP8/INT8/AWQ/GPTQ/NVFP4/MXFP8 等量化；TP/PP/EP/DP 并行与 PD 分离等（以官方文档为准）。
+- <strong>量化与并行</strong>：FP8/INT8/AWQ/GPTQ/NVFP4/MXFP8 等量化；TP/PP/EP/DP（张量 / 流水线 / 专家 / 数据并行）与 PD（prefill/decode）分离等（以官方文档为准）。
 
 ### 架构与源码入口（V1 引擎）
 

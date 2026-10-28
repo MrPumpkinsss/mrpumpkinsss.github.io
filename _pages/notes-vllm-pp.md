@@ -48,11 +48,28 @@ author_profile: true
 <div class="tldr">
   <strong><span class="i18n-zh">先记住三件事</span><span class="i18n-en">TL;DR</span></strong>
   <ul>
-    <li><span class="i18n-zh">PP 把模型按层<strong>连续切段</strong>，每个 rank 管一段；一个请求的层永远不会拆到两段。</span></li>
-    <li><span class="i18n-zh">流水线不空转的关键不是切微批，而是<strong>让 pp_size 个 step 同时在飞</strong>（异步调度 + MRv2 再多 1 个）——每个 stage 手里永远有不同的 step。</span></li>
+    <li><span class="i18n-zh">PP 把模型按层<strong>连续切段</strong>，每段（叫一个 stage）由一组进程执行（进程编号叫 rank）；一个请求的层永远不会拆到两段。</span></li>
+    <li><span class="i18n-zh">流水线不空转的关键不是切微批，而是<strong>让 pp_size 个调度步（step，见下表）同时在飞</strong>（「在飞」＝已签发还没跑完；异步调度 + MRv2 再多 1 个）——每个 stage 手里永远有不同的 step。</span></li>
     <li><span class="i18n-zh">同一请求两次 decode <strong>强制间隔 ≥ pp_size 步</strong>（<code>decode_stagger</code>），对齐采样 token 的回传节奏——这是多个 step 能安全并存的根本。</span></li>
   </ul>
 </div>
+
+<h2 id="先统一几个词">
+  <span class="i18n-zh">先统一几个词</span>
+  <span class="i18n-en">Terms first</span>
+</h2>
+
+<table class="srctable">
+  <tbody>
+    <tr><td><strong>PP</strong></td><td>pipeline parallelism，<span class="i18n-zh">流水线并行：把模型按层切成 pp_size 段，各段放在不同进程/卡上，像流水线一样逐段接力</span></td></tr>
+    <tr><td><strong>stage / rank</strong></td><td><span class="i18n-zh">一「段」叫一个 stage；执行它的那组进程按段编号叫 rank（stage 0 的进程就是 rank 0）</span></td></tr>
+    <tr><td><strong>step（调度步）</strong></td><td><span class="i18n-zh">调度器排一次批 + 各 stage 各做一次前向，算一个 step；下文图里的 T0～T5 就是 step 的编号</span></td></tr>
+    <tr><td><strong><span class="i18n-zh">在飞</span></strong></td><td><span class="i18n-zh">in-flight：已签发、还没跑出结果的 step</span></td></tr>
+    <tr><td><strong>DP</strong></td><td>data parallelism，<span class="i18n-zh">数据并行：复制多份完整引擎，各管各的请求</span></td></tr>
+    <tr><td><strong>MRv2</strong></td><td>Model Runner V2，<span class="i18n-zh">vLLM 新一代「模型执行器」——负责把调度决定真正跑在 GPU 上的那层代码</span></td></tr>
+    <tr><td><strong><span class="i18n-zh">异步调度</span></strong></td><td><span class="i18n-zh">AsyncScheduler：调度器不等上一步结果就签发下一步</span></td></tr>
+  </tbody>
+</table>
 
 <h2 id="一句话定位">
   <span class="i18n-zh">它是怎么「交错」的</span>
@@ -87,16 +104,16 @@ author_profile: true
 </h2>
 
 <ol>
-  <li><span class="i18n-zh">调度器（只在引擎核心进程）产出一份 <code>SchedulerOutput</code>。</span></li>
-  <li><span class="i18n-zh">Executor 用共享内存消息队列（<code>rpc_broadcast_mq</code>）把它<strong>广播给所有 PP rank 的 worker</strong>。</span></li>
-  <li><span class="i18n-zh">Stage 0 算自己的层段，把 <code>intermediate_tensors</code> P2P 递给 stage 1，逐级传递。</span></li>
+  <li><span class="i18n-zh">调度器（跑在「引擎核心」进程里——vLLM 中驱动「调度 → 执行」循环的进程）产出一份 <code>SchedulerOutput</code>（本步的计划：调度了哪些请求、各算几个 token、KV 块怎么分）。</span></li>
+  <li><span class="i18n-zh">Executor（管理全部 worker 进程的执行器）用共享内存消息队列（内部叫 <code>rpc_broadcast_mq</code>）把它<strong>广播给所有流水线级的 worker 进程</strong>。</span></li>
+  <li><span class="i18n-zh">Stage 0 算自己那段层，把算出的中间结果（代码里叫 <code>intermediate_tensors</code>）点对点直接递给 stage 1，逐级传递。</span></li>
   <li><span class="i18n-zh">最后一级采样，结果回到引擎核心（两条路径，见下节）。</span></li>
-  <li><span class="i18n-zh">调度器记账、签发下一步——同时上一步可能还在 GPU 上跑（batch queue 深度 &gt; 1 时）。</span></li>
+  <li><span class="i18n-zh">调度器记账、签发下一步——同时上一步可能还在 GPU 上跑（靠「batch queue」：一个攒着已签发、未完成 step 的队列，深度见下节）。</span></li>
 </ol>
 
 <svg class="dg" viewBox="0 0 860 330" role="img" aria-label="PP 流水线在飞 step 时空图">
   <text x="16" y="22" font-size="12" class="ts">时间 →</text>
-  <text x="16" y="40" font-size="12" class="ts">（每个 stage 每格处理一个 step）</text>
+  <text x="16" y="40" font-size="12" class="ts">T0～T5＝连续 6 个调度步（step＝排一次批 + 各级各前向一次）</text>
   <rect x="100" y="36" width="66" height="42" rx="6" class="b"/><text x="133" y="62" text-anchor="middle" font-size="12">T0</text>
   <rect x="190" y="36" width="66" height="42" rx="6" class="ba"/><text x="223" y="62" text-anchor="middle" font-size="12">T1</text>
   <rect x="280" y="36" width="66" height="42" rx="6" class="bg"/><text x="313" y="62" text-anchor="middle" font-size="12">T2</text>
@@ -130,7 +147,7 @@ author_profile: true
   <line x1="100" y1="206" x2="770" y2="206" class="ln" stroke-dasharray="3 3"/>
   <line x1="100" y1="266" x2="770" y2="266" class="ln" stroke-dasharray="3 3"/>
   <text x="16" y="300" font-size="12" class="ts">稳态（pp_size=4）：同一时刻 4 个在飞 step 错位分布在 4 个 stage 上，每个 stage 都有活干；颜色 = step。</text>
-  <text x="16" y="319" font-size="12" class="ts">同一请求（如 T0 里的 req A）两次 decode 至少隔 pp_size 步才会再被调度（decode_stagger），避免跨 step 的 KV 写冲突。</text>
+  <text x="16" y="319" font-size="12" class="ts">同一请求两次 decode 至少隔 pp_size 步才会再被调度（decode_stagger，见下节），避免跨 step 的 KV 写冲突。</text>
 </svg>
 
 <h2 id="decode-stagger">
@@ -217,7 +234,7 @@ author_profile: true
 </h2>
 
 <ul>
-  <li><strong>PCP / DCP 不是流水线</strong>：<span class="i18n-zh"><code>prefill_context_parallel_size</code> / <code>decode_context_parallel_size</code> 是沿<strong>序列维</strong>切的上下文并行，和 PP（沿层切）正交。周报里「bench forward 加 PCP 支持」说的就是它。</span></li>
+  <li><strong>PCP / DCP 不是流水线</strong>：<span class="i18n-zh"><code>prefill_context_parallel_size</code>（PCP，预填充上下文并行）/ <code>decode_context_parallel_size</code>（DCP，解码上下文并行）是沿<strong>序列维</strong>切的上下文并行，和 PP（沿层切）正交。周报里「bench forward 加 PCP 支持」说的就是它。</span></li>
   <li><strong><span class="i18n-zh">没有 1F1B 虚拟级</span></strong>：<span class="i18n-zh">层不拆虚拟段；「交错」全部由多 step 在飞实现。单步内也不再切微批（runner 里还留着「Support overlapping micro-batches」的 TODO，对应已关闭的 issue #18019）。</span></li>
   <li><strong><span class="i18n-zh">V1 runner 的限制</span></strong>：<span class="i18n-zh">异步调度 + PP 只在 MRv2（<code>VLLM_USE_V2_MODEL_RUNNER</code>，新平台已默认启用）下完整支持；stagger 也只挂在 <code>use_v2_model_runner</code> 分支。</span></li>
   <li><strong><span class="i18n-zh">prefill 节流</span></strong>：<span class="i18n-zh">DP+PP 下有 <code>prefill_schedule_interval</code> 节奏控制，<code>defer_prefills</code> 把 prefill chunk 挪到 cadence 对齐的 step，decode 优先填满流水。</span></li>

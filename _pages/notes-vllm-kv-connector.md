@@ -54,6 +54,24 @@ author_profile: true
   </ul>
 </div>
 
+<h2 id="先统一几个词">
+  <span class="i18n-zh">先统一几个词</span>
+  <span class="i18n-en">Terms first</span>
+</h2>
+
+<table class="srctable">
+  <tbody>
+    <tr><td><strong>KV cache（<span class="i18n-zh">键值缓存</span>）</strong></td><td><span class="i18n-zh">模型为已生成的每个 token 缓存的注意力中间结果，生成每个新 token 都要读它；没有它，每出一个字都得把全部历史重算一遍</span></td></tr>
+    <tr><td><strong>PD <span class="i18n-zh">分离</span></strong></td><td>Prefill / Decode <span class="i18n-zh">分离：「读入整个 prompt 并算 KV」（prefill）和「逐 token 生成」（decode）拆到不同机器实例上，KV 从 prefill 侧传给 decode 侧</span></td></tr>
+    <tr><td><strong><span class="i18n-zh">卸载</span>（offload）</strong></td><td><span class="i18n-zh">把暂时不用的 KV 从显存挪到 CPU 内存 / 硬盘 / 远端，要用再取回</span></td></tr>
+    <tr><td><strong>hook（<span class="i18n-zh">钩子</span>）</strong></td><td><span class="i18n-zh">vLLM 在固定执行点位回调的函数；「写一个 connector」＝实现下文列出的这些 hook</span></td></tr>
+    <tr><td><strong>TP / rank</strong></td><td>TP＝<span class="i18n-zh">张量并行（把一层的计算切到多张卡同时算）；rank＝进程在并行组里的编号</span></td></tr>
+    <tr><td><strong>paged KV buffer</strong></td><td><span class="i18n-zh">经 PagedAttention 分页管理的显存 KV 区域（一块块「页」拼成的逻辑连续缓存）</span></td></tr>
+    <tr><td><strong>slot（<span class="i18n-zh">槽位</span>）</strong></td><td><span class="i18n-zh">KV cache 里一个 token 占的位置</span></td></tr>
+    <tr><td><strong>CUDA graph</strong></td><td><span class="i18n-zh">把一串 GPU 操作录制下来整图重放的技术，省掉每步的 CPU 启动开销</span></td></tr>
+  </tbody>
+</table>
+
 <h2 id="一句话定位">
   <span class="i18n-zh">它是干什么的</span>
   <span class="i18n-en">What it is</span>
@@ -108,7 +126,7 @@ author_profile: true
 <table class="srctable">
   <thead><tr><th>hook</th><th><span class="i18n-zh">何时被调</span></th><th><span class="i18n-zh">干什么</span></th></tr></thead>
   <tbody>
-    <tr><td><code>register_kv_caches</code></td><td><span class="i18n-zh">启动时</span></td><td><span class="i18n-zh">把 paged KV buffer 登记给 connector（NIXL 免拷贝传输的基础）</span></td></tr>
+    <tr><td><code>register_kv_caches</code></td><td><span class="i18n-zh">启动时</span></td><td><span class="i18n-zh">把 paged KV buffer 登记给 connector（NIXL＝NVIDIA 的 KV 传输库，免拷贝传输的基础）</span></td></tr>
     <tr><td><code>bind_connector_metadata</code></td><td><span class="i18n-zh">每步 forward 前</span></td><td><span class="i18n-zh">收到调度器的计划单，步后清除</span></td></tr>
     <tr><td><code>start_load_kv</code></td><td><span class="i18n-zh">forward 前</span></td><td><span class="i18n-zh">启动异步加载（提交后不阻塞）</span></td></tr>
     <tr><td><code>wait_for_layer_load</code></td><td><span class="i18n-zh">每层 attention 执行前</span></td><td><span class="i18n-zh">只等「这一层」的 KV 到位 —— 第 N 层在算时，第 N+1 层的 KV 还在路上，层与层流水重叠</span></td></tr>

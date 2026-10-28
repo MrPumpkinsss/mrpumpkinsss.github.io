@@ -51,12 +51,31 @@ author_profile: true
 <div class="tldr">
   <strong><span class="i18n-zh">先记住四件事</span><span class="i18n-en">TL;DR</span></strong>
   <ul>
-    <li><span class="i18n-zh">核心循环：小模型连猜 k 个 token，大模型<strong>一次前向并行验证</strong>——自回归的 k+1 次串行前向，压缩成「小模型 k 次 + 大模型 1 次」。</span></li>
+    <li><span class="i18n-zh">核心循环：小模型连猜 k 个 token（k＝每轮猜的个数，叫<strong>草稿深度</strong>），大模型<strong>一次前向并行验证</strong>——本来要串行跑 k+1 次大模型前向，压缩成「小模型 k 次 + 大模型 1 次」。</span></li>
     <li><span class="i18n-zh"><strong>输出分布不变</strong>：拒绝采样保证每个最终 token 的分布与只跑大模型完全一致——数学上无损。</span></li>
     <li><span class="i18n-zh">工程难点在<strong>状态管理</strong>：目标 KV、草稿 KV、隐藏状态三套状态，都要按「验证接受到哪」精确回退或复用。</span></li>
     <li><span class="i18n-zh">收益是接受率 α 的函数：E[每步产出] = (1−α^(k+1))/(1−α)；α 低或草稿太贵就是负收益 → 这就是自适应深度（AV）要解决的问题。</span></li>
   </ul>
 </div>
+
+<h2 id="先统一几个词">
+  <span class="i18n-zh">先统一几个词</span>
+  <span class="i18n-en">Terms first</span>
+</h2>
+
+<table class="srctable">
+  <tbody>
+    <tr><td><strong>KV cache（<span class="i18n-zh">键值缓存</span>）</strong></td><td><span class="i18n-zh">模型为已生成的每个 token 缓存的注意力中间结果，生成每个新 token 都要读它</span></td></tr>
+    <tr><td><strong><span class="i18n-zh">草稿深度</span> k</strong></td><td><span class="i18n-zh">每轮草稿猜的 token 个数</span></td></tr>
+    <tr><td><strong>q / p</strong></td><td><span class="i18n-zh">同一个「下一个 token 是谁」的概率分布：q 是草稿模型给的，p 是目标模型给的</span></td></tr>
+    <tr><td><strong><span class="i18n-zh">接受率</span> α</strong></td><td><span class="i18n-zh">草稿 token 平均被接受的比例（0～1）</span></td></tr>
+    <tr><td><strong>bonus token</strong></td><td><span class="i18n-zh">k 个草稿全部被接受后，目标模型从最后一位分布里多采的那 1 个 token（白送的）</span></td></tr>
+    <tr><td><strong><span class="i18n-zh">自回归</span></strong></td><td><span class="i18n-zh">一个一个往右生成：每出新 token 都把它当输入接着出下一个</span></td></tr>
+    <tr><td><strong>EAGLE / MTP / Medusa</strong></td><td><span class="i18n-zh">三类「借大模型隐状态出草稿」的方案名，正文有对比表</span></td></tr>
+    <tr><td><strong>first pass</strong></td><td><span class="i18n-zh">每轮起草的第一个前向：把上轮位置重放一遍，让草稿模型的隐状态和 KV 接上</span></td></tr>
+    <tr><td><strong>TP / rank</strong></td><td>TP＝<span class="i18n-zh">张量并行（一层切到多卡算）；rank＝卡/进程在并行组里的编号</span></td></tr>
+  </tbody>
+</table>
 
 <h2 id="一句话定位">
   <span class="i18n-zh">一句话定位</span>
@@ -77,7 +96,7 @@ author_profile: true
 </p>
 
 <ol>
-  <li><strong><span class="i18n-zh">草稿阶段</span></strong>：<span class="i18n-zh">草稿模型自回归连猜 3 个 token：「北京」「的」「冬天」，每个带草稿概率 q。草稿每猜一个，就要把自己的 KV 写进<strong>草稿自己的 KV cache</strong>（草稿是完整的小模型时）。</span></li>
+  <li><strong><span class="i18n-zh">草稿阶段</span></strong>：<span class="i18n-zh">草稿模型自回归（每猜出一个就把猜测当输入继续猜）连猜 3 个 token：「北京」「的」「冬天」，每个带草稿概率 q。草稿每猜一个，就要把自己的 KV 写进<strong>草稿自己的 KV cache</strong>（草稿是完整的小模型时）。</span></li>
   <li><strong><span class="i18n-zh">验证阶段</span></strong>：<span class="i18n-zh">目标模型<strong>一次前向</strong>吃进 6 个位置「中国的首都是 北京 的 冬天」，并行产出 4 组分布 p₁…p₄——注意大模型只跑了 1 次前向，这是全部收益的来源。</span></li>
   <li><strong><span class="i18n-zh">逐位验证</span></strong>：<span class="i18n-zh">从左到右逐位决定接受或拒绝（数学见下节）：</span>
     <ul>
@@ -155,7 +174,7 @@ author_profile: true
     <tr>
       <td><strong><span class="i18n-zh">草稿 KV cache</span></strong></td>
       <td><span class="i18n-zh">草稿自己的层各自缓存草稿 token 的 KV（独立小模型 / EAGLE 头有自己的注意力）</span></td>
-      <td><span class="i18n-zh">被接受的 m 个草稿条目<strong>仍然有效</strong>；只对被拒的 k−m 条做<strong>逻辑回退</strong>（<code>seq_lens -= num_rejected_tokens</code>、槽位打掩码，不搬数据），下轮起草的 step-0 在原槽位原地重写，并把新采样的 bonus/重采 token 补进草稿链</span></td>
+      <td><span class="i18n-zh">被接受的 m 个草稿条目<strong>仍然有效</strong>；只对被拒的 k−m 条做<strong>逻辑回退</strong>（<code>seq_lens -= num_rejected_tokens</code>、槽位打掩码，不搬数据），下轮起草的第一个前向（first pass）在原槽位原地重写，并把新采样的 bonus/重采 token 补进草稿链</span></td>
     </tr>
     <tr>
       <td><strong><span class="i18n-zh">隐藏状态</span></strong></td>
@@ -171,7 +190,7 @@ author_profile: true
 </h3>
 
 <p>
-  <span class="i18n-zh">以独立小模型为例（vLLM <code>llm_base_proposer.py</code>）：验证接受 m 个、拒绝 k−m 个后，草稿 KV 里<strong>只有被拒的 k−m 个条目失效</strong>（序列在那之后分叉），接受前缀的条目依然有效；新采样的 bonus/重采 token 则还没有草稿 KV。回退本身是<strong>逻辑的、零数据搬运</strong>：<code>seq_lens -= num_rejected_tokens_gpu</code> + 被拒槽位打掩码（slot 置 −1）。下一轮起草的 step-0 first pass 把上轮 k+1 个位置整体重放一遍（输入左移一位、末位插入新采样 token，被拒槽位原地重写）——这次前向每轮本来就要跑，其中被拒 (k−m) 个位置是必要的重写，接受 m 个位置是确定性冗余重算（保证 batched 形状统一、CUDA graph 友好），真正的增量只有新采样那 1 个 token 的小模型前向。EAGLE 系更省：hidden states 直接从目标验证前向接力（<code>hidden_states[:] = target_hidden_states</code>），连草稿隐状态的重算都省了。「物理回退 + 从头重放整条前缀」（每轮多 m+1 个位置 + 块级搬移）是朴素实现的做法，vLLM 避开了。</span>
+  <span class="i18n-zh">以独立小模型为例（vLLM <code>llm_base_proposer.py</code>）：验证接受 m 个、拒绝 k−m 个后，草稿 KV 里<strong>只有被拒的 k−m 个条目失效</strong>（序列在那之后分叉），接受前缀的条目依然有效；新采样的 bonus/重采 token 则还没有草稿 KV。回退本身是<strong>逻辑的、零数据搬运</strong>：<code>seq_lens -= num_rejected_tokens_gpu</code> + 被拒槽位打掩码（slot 置 −1）。下一轮起草的第一个前向（first pass）把上轮 k+1 个位置整体重放一遍（输入左移一位、末位插入新采样 token，被拒槽位原地重写）——这次前向每轮本来就要跑，其中被拒 (k−m) 个位置是必要的重写，接受 m 个位置是确定性冗余重算（纯为让每轮输入形状统一，能用 CUDA graph 整图重放），真正的增量只有新采样那 1 个 token 的小模型前向。EAGLE 系更省：hidden states 直接从目标验证前向接力（<code>hidden_states[:] = target_hidden_states</code>），连草稿隐状态的重算都省了。「物理回退 + 从头重放整条前缀」（每轮多 m+1 个位置 + 块级搬移）是朴素实现的做法，vLLM 避开了。</span>
 </p>
 
 <h2 id="hidden-states-流动">
@@ -188,8 +207,8 @@ author_profile: true
   <tbody>
     <tr><td><strong>n-gram / prompt lookup</strong></td><td><span class="i18n-zh">已生成文本里的重复模式，无模型</span></td><td><span class="i18n-zh">完全不涉及</span></td></tr>
     <tr><td><strong><span class="i18n-zh">独立草稿小模型</span></strong></td><td><span class="i18n-zh">草稿自己的 hidden states，自回归 k 次</span></td><td><span class="i18n-zh">与目标模型无关，两套 KV 独立维护</span></td></tr>
-    <tr><td><strong>EAGLE / EAGLE-3</strong></td><td><span class="i18n-zh">草稿头在<strong>特征级</strong>自回归</span></td><td><span class="i18n-zh">草稿头消费<strong>目标模型的 hidden state</strong>：输入 = 目标 last hidden state（EAGLE-3 还拼接若干<strong>中间层 aux hidden states</strong> 经 FC 投影）+ 下一 token 的 embedding → 预测再下一个 token</span></td></tr>
-    <tr><td><strong>MTP（DeepSeek-V3 系）</strong></td><td><span class="i18n-zh">附加的 MTP 模块一次预测多步</span></td><td><span class="i18n-zh">输入 = 目标 hidden state + 下一 token embedding；每个深度一个 MTP 模块，有自己的 embedding / 投影 / 头</span></td></tr>
+    <tr><td><strong>EAGLE / EAGLE-3</strong></td><td><span class="i18n-zh">草稿头在<strong>特征级</strong>自回归</span></td><td><span class="i18n-zh">草稿头消费<strong>目标模型的 hidden state</strong>：输入 = 目标 last hidden state（EAGLE-3 还拼接若干中间层的辅助隐状态 aux hidden states，经全连接层投影融合）+ 下一 token 的 embedding → 预测再下一个 token</span></td></tr>
+    <tr><td><strong>MTP</strong>（Multi-Token Prediction，<span class="i18n-zh">DeepSeek-V3 引入的多 token 预测</span>）</td><td><span class="i18n-zh">附加的 MTP 模块一次预测多步</span></td><td><span class="i18n-zh">输入 = 目标 hidden state + 下一 token embedding；每个深度一个 MTP 模块，有自己的 embedding / 投影 / 头</span></td></tr>
     <tr><td><strong>Medusa / 多头</strong></td><td><span class="i18n-zh">目标骨干上的多个解码头 + 树注意力</span></td><td><span class="i18n-zh">头直接挂在目标顶层 hidden state 上，无独立草稿模型</span></td></tr>
     <tr><td><strong>LayerSkip / 自投机</strong></td><td><span class="i18n-zh">用目标模型前几层提前退出</span></td><td><span class="i18n-zh">早期层的 hidden states 就是草稿信号，同一套权重</span></td></tr>
   </tbody>
@@ -234,8 +253,8 @@ author_profile: true
     <tr><td><span class="i18n-zh">草稿提议（EAGLE 系）</span></td><td><code>eagle.py</code> + <code>llm_base_proposer.py</code>：<code>pass_hidden_states_to_model=True</code>；EAGLE-3 拼接 aux hidden states；DSpark / DFlash 同基类</td></tr>
     <tr><td><span class="i18n-zh">隐状态提取器</span></td><td><code>extract_hidden_states.py</code>：<span class="i18n-zh">消费目标前向 hidden states 的独立 proposer（MTP 风格，num_spec_tokens=1，自带 kv_cache_gid 与 attention metadata builder）</span></td></tr>
     <tr><td><span class="i18n-zh">批量拒绝采样</span></td><td><code>vllm/v1/sample/rejection_sampler.py</code>：<span class="i18n-zh">Triton 内核（JIT warmup），<code>MAX_SPEC_LEN=128</code>，把采样约束（penalties / bad words / top-k top-p）应用在草稿验证上</span></td></tr>
-    <tr><td><span class="i18n-zh">草稿深度选择</span></td><td><span class="i18n-zh">自适应验证（AV）按上一步接受情况动态定 k′，预算选择已内核化（<code>dynamic/</code>，本周 #63421）</span></td></tr>
-    <tr><td><span class="i18n-zh">显存分片</span></td><td><span class="i18n-zh">批分片采样下 draft logits 每 rank 只存自己验证的请求（本周 #63554，<code>shard_owner / shard_row</code>）</span></td></tr>
+    <tr><td><span class="i18n-zh">草稿深度选择</span></td><td><span class="i18n-zh">自适应验证（AV）按上一步接受情况动态定 k′（本轮猜几个），预算选择已写成 Triton GPU 内核（<code>dynamic/</code> 目录，本周 #63421）</span></td></tr>
+    <tr><td><span class="i18n-zh">显存分片</span></td><td><span class="i18n-zh">批分片采样（batch-sharded sampling：把请求分给各 TP rank 各自验证）下，draft logits 每 rank 只存自己负责的请求（本周 #63554，<code>shard_owner / shard_row</code>）</span></td></tr>
     <tr><td><span class="i18n-zh">回退</span></td><td><span class="i18n-zh">GPU 侧按 <code>num_rejected_tokens</code> 回退块占用，调度器按 <code>spec_decode_tokens</code> 对账占位符</span></td></tr>
   </tbody>
 </table>
