@@ -175,6 +175,60 @@ html[data-theme="dark"] .diagram-fig { border-color:#444; }
   <img src="/files/diagrams/export/pp-02-d.svg" alt="采样 token 两条回传路径">
 </div>
 
+<h2 id="调度触发与新请求入场">
+  <span class="i18n-zh">调度在什么时候发生？新请求什么时候进批？</span>
+  <span class="i18n-en">When does scheduling run? When do new requests join?</span>
+</h2>
+
+<p>
+  <span class="i18n-zh"><strong>白话版</strong>：vLLM 没有定时器。调度只发生在<strong>引擎核心进程</strong>的一个忙循环里：每圈先收新请求，再 schedule 一次、把本步计划广播出去。每个 stage 的 worker 进程<strong>没有调度器</strong>——它只是死循环地「收下一条广播 → 执行自己那段层 → 递给下一级」。所以 <strong>stage 结束不会触发任何调度</strong>：下一步的计划早已广播到位，worker 无缝接上。「一步完成」的唯一标志是末级采样 token 回到 core；「stage 完成」只是 worker 循环转了一圈——两码事。</span>
+  <span class="i18n-en">Plain version: there is no timer. Scheduling runs only in the engine-core process's busy loop: each iteration first drains new requests, then calls schedule() once and broadcasts the step plan. Each stage's worker process has no scheduler at all — it just loops "dequeue the next broadcast → run my layers → relay to the next stage". A stage finishing triggers nothing: the next step's plan was already queued. The only real meaning of "a step finished" is the last stage's sampled tokens returning to the core.</span>
+</p>
+
+<div class="diagram-fig">
+  <img src="/files/diagrams/export/pp-03-d.svg" alt="PP 下两套循环：引擎核心进程的调度循环（收请求 → schedule → 广播 → 等最老步记账）与 worker 进程的执行循环（dequeue → 执行 → 递棒），stage 结束不触发调度">
+</div>
+
+<p>
+  <span class="i18n-zh">核心循环的节奏（pp=4，batch queue 深度 4 的时间线）：</span>
+  <span class="i18n-en">The core loop's rhythm (pp=4, batch queue depth 4):</span>
+</p>
+
+<table class="srctable">
+  <thead>
+    <tr><th><span class="i18n-zh">时刻</span></th><th><span class="i18n-zh">引擎核心进程</span></th><th><span class="i18n-zh">GPU 侧（流水线，错峰）</span></th></tr>
+  </thead>
+  <tbody>
+    <tr><td>T0</td><td><span class="i18n-zh">schedule S0 → 广播</span></td><td><span class="i18n-zh">stage0 算 S0</span></td></tr>
+    <tr><td>T1</td><td><span class="i18n-zh">schedule S1 → 广播</span></td><td><span class="i18n-zh">stage0 算 S1，stage1 算 S0</span></td></tr>
+    <tr><td>T2</td><td><span class="i18n-zh">schedule S2 → 广播</span></td><td><span class="i18n-zh">stage0 算 S2，stage1 算 S1，stage2 算 S0</span></td></tr>
+    <tr><td>T3</td><td><span class="i18n-zh">schedule S3 → 广播（队列已满）</span></td><td><span class="i18n-zh">四级各算不同的步，谁都不触发调度</span></td></tr>
+    <tr><td>T4</td><td><span class="i18n-zh">等 S0 采样回来 → 记账 → schedule S4</span></td><td><span class="i18n-zh">stage0 算 S4，其余照旧错峰</span></td></tr>
+  </tbody>
+</table>
+
+<p>
+  <span class="i18n-zh">新请求的入场时机，取决于它相对「本圈 schedule()」的位置：</span>
+  <span class="i18n-en">When a new request joins the batch depends on where it arrives relative to this iteration's schedule():</span>
+</p>
+
+<table class="srctable">
+  <thead>
+    <tr><th><span class="i18n-zh">请求到达时机</span></th><th><span class="i18n-zh">什么时候进批</span></th></tr>
+  </thead>
+  <tbody>
+    <tr><td><span class="i18n-zh">schedule() 之前（本圈收队列时已在 input_queue）</span></td><td><span class="i18n-zh">本步的批；long prompt 装不下就按五级漏斗切一块先进</span></td></tr>
+    <tr><td><span class="i18n-zh">GPU 在飞时（本步 schedule 已过）</span></td><td><span class="i18n-zh">挂 waiting，<strong>下一步的批</strong>带它——正在飞的那步绝不可能插人</span></td></tr>
+    <tr><td><span class="i18n-zh">预算满 / KV 块不够 / LoRA 上限</span></td><td><span class="i18n-zh">留在 waiting 每圈重试（FCFS，严格按到达序）；显存紧张时从 running 尾部抢占腾块</span></td></tr>
+    <tr><td><span class="i18n-zh">引擎空载</span></td><td><span class="i18n-zh">循环阻塞睡在 <code>input_queue.get()</code> 上，请求到达立即 schedule——没有轮询延迟</span></td></tr>
+  </tbody>
+</table>
+
+<p>
+  <span class="i18n-zh">一个实用细节：decode 请求每步只占 1 个 token 的预算（加草稿槽位），所以即使满批 decode，剩余预算通常仍装得下新请求的第一块 prefill——<strong>新请求几乎每步都有机会进批</strong>，不存在「等整批跑完」。另外引擎空载时第一个请求是「叫醒」它的：从进门到进批只差一次 schedule，微秒级。</span>
+  <span class="i18n-en">A practical note: decode requests only consume 1 token of budget per step (+ draft slots), so even with a full decode batch the remaining budget usually still fits the first chunk of a new prompt — new requests get admitted almost every step. And when the engine is idle, the first request wakes the loop: arrival-to-batch is a single schedule() away.</span>
+</p>
+
 <h2 id="边界与易混淆">
   <span class="i18n-zh">边界与易混淆点</span>
   <span class="i18n-en">Boundaries &amp; gotchas</span>
@@ -201,6 +255,9 @@ html[data-theme="dark"] .diagram-fig { border-color:#444; }
     <tr><td><span class="i18n-zh">SchedulerOutput 广播 / 结果回传</span></td><td><code>vllm/v1/executor/multiproc_executor.py: rpc_broadcast_mq</code></td></tr>
     <tr><td><span class="i18n-zh">级间 intermediate 传递、两种 token 回传</span></td><td><code>vllm/v1/worker/gpu_model_runner.py</code>（<code>sync_and_gather_intermediate_tensors</code>、<code>_pp_recv_work</code>）</td></tr>
     <tr><td><span class="i18n-zh">decode_stagger / 占位符</span></td><td><code>vllm/v1/core/sched/async_scheduler.py</code>；<code>scheduler.py</code>（<code>next_decode_eligible_step</code> 检查）</td></tr>
+    <tr><td><span class="i18n-zh">调度触发循环（每圈先收队列再 step）</span></td><td><code>vllm/v1/engine/core.py: EngineCore.run_busy_loop</code> / <code>_process_input_queue</code>（空载阻塞睡在 <code>input_queue.get()</code>）</td></tr>
+    <tr><td><span class="i18n-zh">worker 侧执行循环（无调度器）</span></td><td><code>vllm/v1/executor/multiproc_executor.py: WorkerProc.worker_busy_loop</code>（dequeue 广播 → 执行）</td></tr>
+    <tr><td><span class="i18n-zh">新请求准入（waiting → 本步批）</span></td><td><code>vllm/v1/core/sched/scheduler.py: schedule()</code> 准入循环、<code>add_request()</code>（按是否持 KV 进 <code>kv_holding_waiting</code> / <code>waiting</code>）</td></tr>
   </tbody>
 </table>
 

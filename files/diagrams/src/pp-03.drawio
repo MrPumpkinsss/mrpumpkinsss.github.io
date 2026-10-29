@@ -1,0 +1,60 @@
+<mxfile host="app.diagrams.net">
+  <diagram name="d" id="d">
+    <mxGraphModel dx="1000" dy="600" grid="0" page="1" pageWidth="880" pageHeight="400" math="0" shadow="0">
+      <root>
+        <mxCell id="0"/><mxCell id="1" parent="0"/>
+        <mxCell id="t1" value="PP 下只有引擎核心进程在调度 —— stage 结束不会触发调度" style="text;html=1;fontSize=14;fontColor=#333333;" vertex="1" parent="1">
+          <mxGeometry x="30" y="10" width="820" height="24" as="geometry"/>
+        </mxCell>
+        <mxCell id="t2" value="左：引擎核心的忙循环（每圈一次 schedule）· 右：每个 stage 一个 worker 进程，只收广播、不调度" style="text;html=1;fontSize=11;fontColor=#666666;" vertex="1" parent="1">
+          <mxGeometry x="30" y="34" width="820" height="18" as="geometry"/>
+        </mxCell>
+        <mxCell id="lh" value="引擎核心进程（唯一的调度器）" style="text;html=1;fontSize=12;fontColor=#333333;" vertex="1" parent="1">
+          <mxGeometry x="30" y="60" width="390" height="20" as="geometry"/>
+        </mxCell>
+        <mxCell id="l1" value="① 收 input_queue&lt;br&gt;新请求 / abort 在每圈开头被收走，挂进 waiting" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#eef3fd;strokeColor=#7a97d4;fontSize=11;fontColor=#333333;" vertex="1" parent="1">
+          <mxGeometry x="30" y="84" width="390" height="46" as="geometry"/>
+        </mxCell>
+        <mxCell id="l2" value="② schedule()&lt;br&gt;从 waiting 准入请求，产出 SchedulerOutput（本步计划）" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#eef3fd;strokeColor=#7a97d4;fontSize=11;fontColor=#333333;" vertex="1" parent="1">
+          <mxGeometry x="30" y="144" width="390" height="46" as="geometry"/>
+        </mxCell>
+        <mxCell id="l3" value="③ rpc_broadcast_mq&lt;br&gt;计划广播给所有 stage 的 worker" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#eef3fd;strokeColor=#7a97d4;fontSize=11;fontColor=#333333;" vertex="1" parent="1">
+          <mxGeometry x="30" y="204" width="390" height="46" as="geometry"/>
+        </mxCell>
+        <mxCell id="l4" value="④ batch queue 满 → 等最老一步采样结果回来&lt;br&gt;update_from_output 记账，再调度新的一步" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff3e0;strokeColor=#e0a04a;fontSize=11;fontColor=#333333;" vertex="1" parent="1">
+          <mxGeometry x="30" y="264" width="390" height="46" as="geometry"/>
+        </mxCell>
+        <mxCell id="lnote" value="↺ 回到 ① —— 每圈只 schedule 一次；同步调度时下一圈要等本步流水线走完" style="text;html=1;fontSize=10;fontColor=#999999;" vertex="1" parent="1">
+          <mxGeometry x="30" y="314" width="390" height="18" as="geometry"/>
+        </mxCell>
+        <mxCell id="rh" value="worker 进程 × pp_size（每个 stage 一个，没有调度器）" style="text;html=1;fontSize=12;fontColor=#333333;" vertex="1" parent="1">
+          <mxGeometry x="470" y="60" width="380" height="20" as="geometry"/>
+        </mxCell>
+        <mxCell id="r1" value="worker_busy_loop&lt;br&gt;从广播队列 dequeue 下一步计划（计划早就到了，无缝接上）" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#e9f6ee;strokeColor=#59a97c;fontSize=11;fontColor=#333333;" vertex="1" parent="1">
+          <mxGeometry x="470" y="84" width="380" height="46" as="geometry"/>
+        </mxCell>
+        <mxCell id="r2" value="执行本 stage 那段层&lt;br&gt;intermediate 点对点递给下一级" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#e9f6ee;strokeColor=#59a97c;fontSize=11;fontColor=#333333;" vertex="1" parent="1">
+          <mxGeometry x="470" y="144" width="380" height="46" as="geometry"/>
+        </mxCell>
+        <mxCell id="r3" value="末级 stage：采样&lt;br&gt;结果回传引擎核心" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#e9f6ee;strokeColor=#59a97c;fontSize=11;fontColor=#333333;" vertex="1" parent="1">
+          <mxGeometry x="470" y="204" width="380" height="46" as="geometry"/>
+        </mxCell>
+        <mxCell id="rnote" value="↺ 死循环：收 → 算 → 递棒 —— 「stage 结束」就是转完一圈" style="text;html=1;fontSize=10;fontColor=#999999;" vertex="1" parent="1">
+          <mxGeometry x="470" y="264" width="380" height="18" as="geometry"/>
+        </mxCell>
+        <mxCell id="r4" value="一步完成 ＝ 末级采样回到 core&lt;br&gt;stage 完成 ＝ worker 循环转了一圈 —— 两码事" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f2f2f4;strokeColor=#b9bcc4;fontSize=11;fontColor=#333333;" vertex="1" parent="1">
+          <mxGeometry x="470" y="286" width="380" height="46" as="geometry"/>
+        </mxCell>
+        <mxCell id="e_bc" style="html=1;endArrow=block;endFill=1;strokeColor=#7a879d;strokeWidth=1.4;rounded=0;" edge="1" parent="1">
+          <mxGeometry relative="1" as="geometry"><mxPoint x="420" y="210" as="sourcePoint"/><mxPoint x="470" y="115" as="targetPoint"/></mxGeometry>
+        </mxCell>
+        <mxCell id="e_rt" style="html=1;endArrow=block;endFill=1;strokeColor=#e0a04a;strokeWidth=1.4;rounded=0;dashed=1;" edge="1" parent="1">
+          <mxGeometry relative="1" as="geometry"><mxPoint x="470" y="235" as="sourcePoint"/><mxPoint x="420" y="288" as="targetPoint"/></mxGeometry>
+        </mxCell>
+        <mxCell id="lg" value="图例：蓝框＝引擎核心的调度循环 · 绿框＝worker 的执行循环 · 琥珀框＝等待最老步 / 记账 · 灰框＝概念区分&lt;br&gt;实线箭头＝计划下发 · 橙色虚线箭头＝结果回传（同步：经 MQ；异步：GPU broadcast 直达首级）" style="text;html=1;fontSize=11;fontColor=#666666;" vertex="1" parent="1">
+          <mxGeometry x="30" y="350" width="820" height="36" as="geometry"/>
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>
