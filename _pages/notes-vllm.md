@@ -46,7 +46,7 @@ html[data-theme="dark"] .wk-why { color:#aaa; border-left-color:#6f8cc9; }
 </p>
 
 <div class="i18n-en">
-  <p><em>English quick summary: this page is a <strong>weekly tracker of upstream vLLM mechanisms</strong> — each week I read the newly merged PRs, pick the interesting mechanisms, and explain them in Chinese with a structure diagram and PR links. This week (2026-10-20 → 10-27): Triton-ized adaptive-verification budget selection, batch-sharded draft logits, Kimi-K3 KV-balanced MLA decode, and Fast Start weight-cache key hardening. (Diagrams are labeled in Chinese.)</em></p>
+  <p><em>English quick summary: this page is a <strong>weekly tracker of upstream vLLM mechanisms</strong> — each week I read the newly merged PRs, pick the interesting mechanisms, and explain them in Chinese with a structure diagram and PR links. This week (2026-10-27 → 11-03): PP speculative-decode broadcast fixes in MRv2, the batch-position ownership refactor for sharded draft logits plus DSpark sequential-block sharding, a quantized draft lm_head for DSpark, and NIXL KV-head re-sharding for heterogeneous-TP P/D transfers. (Diagrams are labeled in Chinese.)</em></p>
 </div>
 
 <h2 id="追踪说明">
@@ -60,6 +60,100 @@ html[data-theme="dark"] .wk-why { color:#aaa; border-left-color:#6f8cc9; }
   <li><span class="i18n-zh"><strong>筛选标准</strong>：新机制 / 性能机制优先；bugfix 只挑影响面大的；CI / 文档类只在快讯里带一句。</span></li>
   <li><span class="i18n-zh"><strong>图</strong>：每个机制配一张结构图（SVG，适配深色模式）；图与文中的数字均来自 PR 正文的自测数据，我未亲自复现。</span></li>
 </ul>
+
+<h2 id="week-2026-11-03">
+  <span class="i18n-zh">本周：2026-10-27 → 11-03</span>
+  <span class="i18n-en">This week: 2026-10-27 → 11-03</span>
+</h2>
+
+<p>
+  <span class="i18n-zh">窗口内合入 533 个 PR。本周<strong>投机解码</strong>持续刷屏：上周的批分片采样出了两集续作（归属重构 ＋ DSpark 起草块分片），PP 的草稿/采样广播补上竞态与同步，草稿 lm_head 也接上了量化；另有一条 PD 分离的 KV 页面跨 TP 重切。这些机制会进 v0.32.0（10-18 发布）之后的下一个 release。</span>
+</p>
+
+<h3 id="pp-broadcast-fix">1 · PP 投机解码广播：竞态、同步与空列三处修复 · <a href="https://github.com/vllm-project/vllm/pull/64458">#64458</a></h3>
+
+<p class="wk-why">
+  <span class="i18n-zh"><strong>解决什么问题：</strong>PP 下草稿/采样 token 的广播跑在多条 CUDA 流上，流序错了会读到被覆写的行——输出悄悄出错；非末级 rank 还有 GPU↔CPU 同步拖节奏、恒定 padding 的空列浪费带宽。<strong>目的是什么：</strong>把流序修正、同步去掉、广播按需定宽，让 PP＋投机解码的广播既正确又省。</span>
+</p>
+
+<p>
+  <span class="i18n-zh">本 PR 修 <code>#50514</code> 引入的 sampled-token / draft 广播：① <strong>竞态修复</strong>——草稿更新时从共享 <code>req_states.draft_tokens</code> buffer 做 gather 原来跑在 broadcast stream 上，主 stream 可能先覆写这些行，gather 挪回 main stream 串行化；② <strong>去掉非末级 rank 的 GPU↔CPU 同步</strong>——原来用 <code>torch.as_tensor</code> 建 boolean mask 过滤收到的草稿，现在挪进 post_update 内核、复用 <code>idx_mapping</code>（-1 ＝ 排除行）；③ <strong>按需广播</strong>——本步没有草稿提案（skip_drafts）就直接跳过草稿广播，并改由「本步是否广播了采样 token」来门控；④ <strong>按需定宽</strong>——采样 token 广播按本步实际宽度开（无草稿 1 列），不再固定 pad 到 <code>num_speculative_tokens+1</code>；⑤ EAGLE3 aux hidden state 的 PP 支持检查挪进 <code>set_eagle3_aux_hidden_state_layers</code>。</span>
+</p>
+
+<div class="diagram-fig">
+  <img src="/files/diagrams/export/vllm-05-d.svg" alt="PP 投机解码广播修复前后对照：竞态、GPU-CPU 同步、空列 padding 三处">
+</div>
+
+<h3 id="sharded-draft-s2">2 · 批分片采样第二季：归属按 batch 位置、DSpark 起草块也分片 · <a href="https://github.com/vllm-project/vllm/pull/64356">#64356</a> ＋ <a href="https://github.com/vllm-project/vllm/pull/63886">#63886</a></h3>
+
+<p class="wk-why">
+  <span class="i18n-zh"><strong>解决什么问题：</strong>上周 #63554 的按槽位归属让 rank 负载跟着槽位分配器漂、每 rank 行数每步在变（CUDA graph 捕不了）；DSpark 的 Markov 起草块还全量复制，每 rank 算全词表、采所有请求。<strong>目的是什么：</strong>改成按 batch 位置归属——形状固定、图可捕获——并把起草侧沿同一规则分片。</span>
+</p>
+
+<p>
+  <span class="i18n-zh"><strong>#64356（归属重构）</strong>：归属从 <code>req_state_idx % tp_size</code> 改为 <strong>batch 位置 i</strong>——rank ＝ <code>i % tp_size</code>、row ＝ <code>i // tp_size</code>，每 rank 至多 ⌈num_reqs/tp⌉ 行、形状只依赖批大小，现有草稿 CUDA graph 直接捕获。缓存与三个映射表（<code>row_mapping / shard_mapping / inverse_row_mapping</code>）收口进新对象 <code>DraftLogitsCache</code>。一个细节：行是每步重排的，被调度器跳过的请求会发现自己的行被覆写——<code>stale_drafts</code>（Triton 内核）把换了主的行标 stale，RejectionSampler 走既有 invalid-drafts 路径<strong>从目标分布重采</strong>，无损，只降那一步的接受率。选入条件不变：speculator 支持、无 draft watermarker、PCP ＝ 1（PCP 下的越界 bug 由 #64151 直接禁用兜住）。</span>
+</p>
+
+<div class="diagram-fig">
+  <img src="/files/diagrams/export/vllm-06-d.svg" alt="批分片 draft logits 归属重构：槽位取模改为 batch 位置，TP2 落位示例与 stale 行处理">
+</div>
+
+<p>
+  <span class="i18n-zh"><strong>#63886（DSpark 起草块分片）</strong>：把 DSpark 的串行 Markov 块沿同一归属规则分片，四步走：① 各 rank 给所有请求算词表分片的基座 draft logits（owner-major 排列，padding 槽读请求 0 的行再丢弃）；② <strong>all-to-all 把分片从词表维重切成 batch 维</strong>——每个 rank 拿到自己请求的全词表 logits；③ Markov 循环只跑自己请求的行；④ all-gather 草稿（自适应验证时含置信度）恢复 batch 顺序。所有形状只依赖 <code>num_reqs</code>，不用第二套 CUDA graph。通信上收敛到<strong>单一 PyNCCL communicator</strong>：验证的 logits 交换也走同一条 TP comm（<code>all_to_all_vocab_shards</code> 取代 <code>all_to_all_logits</code>）——独立 c10d all-to-all 会让 NCCL 多配一套 P2P buffer，GB200 上每 GPU 约 1.1 GiB；PyNCCL 不可用时回退 c10d。</span>
+</p>
+
+<div class="diagram-fig">
+  <img src="/files/diagrams/export/vllm-07-d.svg" alt="DSpark Markov 块分片四步：词表分片 → all-to-all 重切 batch 维 → 只算自己的行 → all-gather 恢复顺序">
+</div>
+
+<h3 id="dspark-lmhead-quant">3 · DSpark 草稿头量化：共享 lm_head 配私有 FP8 副本 · <a href="https://github.com/vllm-project/vllm/pull/64368">#64368</a></h3>
+
+<p class="wk-why">
+  <span class="i18n-zh"><strong>解决什么问题：</strong>共享目标 lm_head 的起草器，每步基座 logits 都要过一遍 BF16 大 GEMM（词表 × hidden），起草时延被它拖住。<strong>目的是什么：</strong>草稿头用 FP8/NVFP4 私有副本算基座 logits，目标验证仍用自己的 BF16 头——起草提速而精度路径不动。</span>
+</p>
+
+<p>
+  <span class="i18n-zh"><code>draft_lm_head_quantization</code>（<a href="https://github.com/vllm-project/vllm/pull/59973">#59973</a>）此前只支持 EAGLE / MTP，本 PR 把 DeepSeek-V4 / V4.1 的 DSpark 起草器接上（对应 sglang#39622 的 vLLM 实现）：<code>--speculative-config '{"method": "dspark", "num_speculative_tokens": 5, "draft_lm_head_quantization": "fp8"}'</code>。实测（MI355X · DeepSeek-V4.1-Flash · AgentX，PR 自测未复现）：draft-head GEMM <strong>348µs → 60µs / 步</strong>；ITL P50 在 TP2 c1 <strong>−4.0%</strong>、TP4 c1 −2.4%，c8 起中性；接受长度与 GSM8K 在噪声内不变——因为验证仍用目标自己的头。实现上没有新机制：EAGLE / DSpark 共享 lm_head 的逻辑抽成 <code>share_target_lm_head</code> 一个 helper，DSpark 经 <code>DSparkSpeculatorConfig.supported_options</code> 接入，默认关闭。</span>
+</p>
+
+<div class="diagram-fig">
+  <img src="/files/diagrams/export/vllm-08-d.svg" alt="DSpark 草稿头量化：起草走 FP8 私有副本、验证仍走目标 BF16 头">
+</div>
+
+<h3 id="nixl-hetero-tp">4 · NIXL 跨异构 TP 搬 NVFP4 KV 页：按 KV 头重切 · <a href="https://github.com/vllm-project/vllm/pull/64475">#64475</a></h3>
+
+<p class="wk-why">
+  <span class="i18n-zh"><strong>解决什么问题：</strong>PD 分离里 prefill 和 decode 常想用不同 TP（P=TP1 省通信、D=TP4 提吞吐），但 KV 页布局沿 TP 切，页面不兼容就传不了——NVFP4 页此前在异构 TP 下一律被拒。<strong>目的是什么：</strong>对「按 KV 头为主序」布局的页，NIXL 传输时按目标 TP 重排头部，异构 TP 的 KV 复用打通。</span>
+</p>
+
+<p>
+  <span class="i18n-zh">当 attention spec 声明页面按 KV head 布局（<code>AttentionSpec.kv_head_major_slots</code>）时，NIXL 即可在异构 TP 间重切搬运；MiniMax-M3 的 MSA NVFP4 后端已声明该布局，FlashInfer 的 NVFP4 页因为头内字节不连续仍被拒（#61865 行为不变）。GB200 单测通过（nixl_connector / desc_geometry / kv_cache_utils）。该 PR 出自 MiniMax-M3.1-Flash 系列（<a href="https://github.com/vllm-project/vllm/pull/63232">#63232</a>）的独立拆分。</span>
+</p>
+
+<div class="diagram-fig">
+  <img src="/files/diagrams/export/vllm-09-d.svg" alt="NIXL 跨异构 TP 传输：prefill TP1 的 KV 页按 decode TP4 重排头部">
+</div>
+
+<h3 id="quick-hits-w2">
+  <span class="i18n-zh">快讯</span>
+  <span class="i18n-en">Quick hits</span>
+</h3>
+
+<ul>
+  <li><strong>批分片 ＋ PCP 不兼容</strong>：<a href="https://github.com/vllm-project/vllm/pull/64151">#64151</a> — 批分片 draft logits 在 PCP（prefill 上下文并行）下禁用：PCP 用 req_state_idx 索引、没算分片偏移，先关掉保正确。</li>
+  <li><strong>草稿侧省显存</strong>：<a href="https://github.com/vllm-project/vllm/pull/64612">#64612</a> — GLM5.3：草稿模型切 dlfash FP8 KV cache，每 rank 省 2.85 GB。</li>
+  <li><strong>PP ＋ KV 传输</strong>：<a href="https://github.com/vllm-project/vllm/pull/64733">#64733</a> — MiniMax-M3.1 PP 优化：NIXL 从 PP prefill stage 拉 KV（pull 模式）＋ SM10x 上 Q8KV4 prefill workspace。</li>
+  <li><strong>前缀缓存 ＋ 滑窗</strong>：<a href="https://github.com/vllm-project/vllm/pull/64094">#64094</a> — ROCm DSv4.1 在 gfx950 开 prefix-cache SWA replay（滑窗注意力的前缀缓存重放）。</li>
+  <li><strong>TP ＋ MegaMoE</strong>：<a href="https://github.com/vllm-project/vllm/pull/64659">#64659</a> — MiniMax-M3：序列并行 ＋ GEMM-RS（reduce-scatter 融进 GEMM）；<a href="https://github.com/vllm-project/vllm/pull/64852">#64852</a> — fused norm+quant MXFP8（NVIDIA）。</li>
+</ul>
+
+<h2 id="archive">
+  <span class="i18n-zh">往期周报</span>
+  <span class="i18n-en">Past weeks</span>
+</h2>
+
+<details class="prwiki" markdown="1">
+<summary><strong><span class="i18n-zh">第 1 期 · 2026-10-20 → 10-27</span><span class="i18n-en">Issue 1 · 2026-10-20 → 10-27</span></strong>（<span class="i18n-zh">AV 预算选择内核化 · 批分片 draft logits · Kimi-K3 KV 均衡 MLA · Fast Start 缓存 key —— 点开展开</span><span class="i18n-en">AV Triton-ization, batch-sharded draft logits, Kimi-K3 KV-balanced MLA, Fast Start cache key</span>）</summary>
 
 <h2 id="week-2026-10-27">
   <span class="i18n-zh">本周：2026-10-20 → 10-27</span>
@@ -139,15 +233,7 @@ html[data-theme="dark"] .wk-why { color:#aaa; border-left-color:#6f8cc9; }
   <li><strong>生态</strong>：NIXL（NVIDIA 的 KV 传输库）升 1.5.1（<a href="https://github.com/vllm-project/vllm/pull/63817">#63817</a>）；DeepGEMM MegaMoE、AgentX 调优 preset（AgentX＝官方部署调优预设体系；preset / recipe＝针对「模型 × 硬件」预先调好的参数组合；Kimi-K3 / DeepSeek-V4.1 / MiniMax-M3 等型号持续更新）。</li>
 </ul>
 
-<h2 id="archive">
-  <span class="i18n-zh">往期周报</span>
-  <span class="i18n-en">Past weeks</span>
-</h2>
-
-<p>
-  <span class="i18n-zh">暂无。从下一周起，旧的一期会挪到这里归档。</span>
-  <span class="i18n-en">Empty for now; each week the previous entry moves here.</span>
-</p>
+</details>
 
 <details class="prwiki" markdown="1">
 <summary><strong><span class="i18n-zh">背景速览</span><span class="i18n-en">Background primer</span></strong>（<span class="i18n-zh">PagedAttention / 连续批处理 / 架构 / 常用参数 / 学习路线 —— 点开查看</span><span class="i18n-en">PagedAttention, continuous batching, architecture, parameters, learning path</span>）</summary>

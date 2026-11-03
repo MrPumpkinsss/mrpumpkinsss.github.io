@@ -1,0 +1,33 @@
+<mxfile host="app.diagrams.net">
+  <diagram name="d" id="d">
+    <mxGraphModel dx="1000" dy="600" grid="0" page="1" pageWidth="880" pageHeight="300" math="0" shadow="0">
+      <root>
+        <mxCell id="0"/><mxCell id="1" parent="0"/>
+        <mxCell id="t1" value="DSpark 草稿头量化：给共享 lm_head 配一份私有 FP8 副本 · #64368" style="text;html=1;fontSize=14;fontColor=#333333;" vertex="1" parent="1">
+          <mxGeometry x="30" y="10" width="820" height="22" as="geometry"/>
+        </mxCell>
+        <mxCell id="t2" value="draft_lm_head_quantization（#59973）此前只支持 EAGLE / MTP，本 PR 接上 DeepSeek-V4 / V4.1 的 DSpark 起草器" style="text;html=1;fontSize=11;fontColor=#666666;" vertex="1" parent="1">
+          <mxGeometry x="30" y="32" width="820" height="16" as="geometry"/>
+        </mxCell>
+        <mxCell id="ctx" value="DSpark 起草器与目标共享 lm_head（词表 × hidden 的大 GEMM）；起草步的基座 logits 原来走 BF16 头，起草时延被它拖住" style="text;html=1;fontSize=12;fontColor=#333333;" vertex="1" parent="1">
+          <mxGeometry x="30" y="56" width="820" height="36" as="geometry"/>
+        </mxCell>
+        <mxCell id="draft" value="起草路（快）&lt;br&gt;私有 FP8 / NVFP4 副本算基座 logits&lt;br&gt;draft-head GEMM：348µs → 60µs / 步（MI355X trace）" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#eef3fd;strokeColor=#7a97d4;fontSize=11;fontColor=#333333;" vertex="1" parent="1">
+          <mxGeometry x="30" y="104" width="390" height="64" as="geometry"/>
+        </mxCell>
+        <mxCell id="verify" value="验证路（准）&lt;br&gt;目标仍用自己的 BF16 头验证&lt;br&gt;接受长度与 GSM8K 在噪声内不变" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#e9f6ee;strokeColor=#59a97c;fontSize=11;fontColor=#333333;" vertex="1" parent="1">
+          <mxGeometry x="460" y="104" width="390" height="64" as="geometry"/>
+        </mxCell>
+        <mxCell id="nums" value="实测（MI355X · DeepSeek-V4.1-Flash · AgentX · fp8，PR 自测未复现）：ITL P50 −4.0%（TP2 c1）· −2.4%（TP4 c1）· c8 起中性（并发高了权重加载不再是瓶颈）" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff3e0;strokeColor=#e0a04a;fontSize=11;fontColor=#333333;" vertex="1" parent="1">
+          <mxGeometry x="30" y="180" width="820" height="44" as="geometry"/>
+        </mxCell>
+        <mxCell id="n1" value="无新机制：EAGLE / DSpark 的共享逻辑抽成 share_target_lm_head；DSpark 经 supported_options 接入，默认关闭（vLLM 侧对应 sglang#39622）" style="text;html=1;fontSize=10;fontColor=#999999;" vertex="1" parent="1">
+          <mxGeometry x="30" y="234" width="820" height="16" as="geometry"/>
+        </mxCell>
+        <mxCell id="lg" value="图例：蓝＝起草路（快） · 绿＝验证路（准） · 琥珀＝PR 自测数据" style="text;html=1;fontSize=11;fontColor=#666666;" vertex="1" parent="1">
+          <mxGeometry x="30" y="258" width="820" height="18" as="geometry"/>
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>

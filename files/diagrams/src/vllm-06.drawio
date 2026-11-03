@@ -1,0 +1,54 @@
+<mxfile host="app.diagrams.net">
+  <diagram name="d" id="d">
+    <mxGraphModel dx="1000" dy="600" grid="0" page="1" pageWidth="880" pageHeight="300" math="0" shadow="0">
+      <root>
+        <mxCell id="0"/><mxCell id="1" parent="0"/>
+        <mxCell id="t1" value="批分片 draft logits：归属从「槽位取模」改为「batch 位置」 · #64356" style="text;html=1;fontSize=14;fontColor=#333333;" vertex="1" parent="1">
+          <mxGeometry x="30" y="10" width="820" height="22" as="geometry"/>
+        </mxCell>
+        <mxCell id="t2" value="上周 #63554 的续作：固定每 rank 形状 → CUDA graph 可捕获；被跳过请求的行覆写走无损 stale 处理" style="text;html=1;fontSize=11;fontColor=#666666;" vertex="1" parent="1">
+          <mxGeometry x="30" y="32" width="820" height="16" as="geometry"/>
+        </mxCell>
+        <mxCell id="old" value="旧归属（#63554）&lt;br&gt;owner ＝ req_state_idx % tp&lt;br&gt;槽位分配器怎么撒请求、负载就怎么歪；行数每步漂移 → CUDA graph 捕不了" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff3e0;strokeColor=#e0a04a;fontSize=11;fontColor=#333333;" vertex="1" parent="1">
+          <mxGeometry x="30" y="56" width="390" height="64" as="geometry"/>
+        </mxCell>
+        <mxCell id="new" value="新归属（本 PR）&lt;br&gt;batch 位置 i → rank ＝ i % tp、row ＝ i // tp&lt;br&gt;每 rank 行数固定 ⌈num_reqs/tp⌉ → 图可捕获" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#eef3fd;strokeColor=#7a97d4;fontSize=11;fontColor=#333333;" vertex="1" parent="1">
+          <mxGeometry x="460" y="56" width="390" height="64" as="geometry"/>
+        </mxCell>
+        <mxCell id="ea" style="html=1;endArrow=block;endFill=1;strokeColor=#7a879d;strokeWidth=1.4;rounded=0;" edge="1" parent="1">
+          <mxGeometry relative="1" as="geometry"><mxPoint x="420" y="88" as="sourcePoint"/><mxPoint x="460" y="88" as="targetPoint"/></mxGeometry>
+        </mxCell>
+        <mxCell id="mh" value="TP2 · 请求 A B C D 的落位" style="text;html=1;fontSize=12;fontColor=#333333;" vertex="1" parent="1">
+          <mxGeometry x="30" y="132" width="390" height="18" as="geometry"/>
+        </mxCell>
+        <mxCell id="r0h" value="rank 0（row 0 / row 1）" style="text;html=1;fontSize=11;fontColor=#666666;" vertex="1" parent="1">
+          <mxGeometry x="30" y="152" width="190" height="16" as="geometry"/>
+        </mxCell>
+        <mxCell id="r0a" value="A（位置 0）→ row 0" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#eef3fd;strokeColor=#7a97d4;fontSize=11;fontColor=#333333;" vertex="1" parent="1">
+          <mxGeometry x="30" y="170" width="190" height="22" as="geometry"/>
+        </mxCell>
+        <mxCell id="r0c" value="C（位置 2）→ row 1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#eef3fd;strokeColor=#7a97d4;fontSize=11;fontColor=#333333;" vertex="1" parent="1">
+          <mxGeometry x="30" y="194" width="190" height="22" as="geometry"/>
+        </mxCell>
+        <mxCell id="r1h" value="rank 1（row 0 / row 1）" style="text;html=1;fontSize=11;fontColor=#666666;" vertex="1" parent="1">
+          <mxGeometry x="230" y="152" width="190" height="16" as="geometry"/>
+        </mxCell>
+        <mxCell id="r1b" value="B（位置 1）→ row 0" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#eef3fd;strokeColor=#7a97d4;fontSize=11;fontColor=#333333;" vertex="1" parent="1">
+          <mxGeometry x="230" y="170" width="190" height="22" as="geometry"/>
+        </mxCell>
+        <mxCell id="r1d" value="D（位置 3）→ row 1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#eef3fd;strokeColor=#7a97d4;fontSize=11;fontColor=#333333;" vertex="1" parent="1">
+          <mxGeometry x="230" y="194" width="190" height="22" as="geometry"/>
+        </mxCell>
+        <mxCell id="stale" value="行复用与 stale 处理&lt;br&gt;请求被调度器跳过 → 行被别的请求复用覆写&lt;br&gt;inverse_row_mapping ＋ stale_drafts（Triton 内核）把换了主的行标 stale&lt;br&gt;RejectionSampler 走既有 invalid-drafts 路径从目标重采——无损，只降该步接受率" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f2f2f4;strokeColor=#b9bcc4;fontSize=11;fontColor=#333333;" vertex="1" parent="1">
+          <mxGeometry x="460" y="132" width="390" height="84" as="geometry"/>
+        </mxCell>
+        <mxCell id="n1" value="选入条件不变：speculator 支持 · 无 draft watermarker · PCP ＝ 1（#64151 起 PCP 下直接禁用）" style="text;html=1;fontSize=10;fontColor=#999999;" vertex="1" parent="1">
+          <mxGeometry x="30" y="232" width="820" height="16" as="geometry"/>
+        </mxCell>
+        <mxCell id="lg" value="图例：琥珀＝旧方案的问题 · 蓝＝新归属 · 灰＝失效行处理 · 收口在 DraftLogitsCache（values / row_mapping / shard_mapping / inverse_row_mapping）" style="text;html=1;fontSize=11;fontColor=#666666;" vertex="1" parent="1">
+          <mxGeometry x="30" y="256" width="820" height="18" as="geometry"/>
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>

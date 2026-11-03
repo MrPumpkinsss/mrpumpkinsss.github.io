@@ -1,0 +1,39 @@
+<mxfile host="app.diagrams.net">
+  <diagram name="d" id="d">
+    <mxGraphModel dx="1000" dy="600" grid="0" page="1" pageWidth="880" pageHeight="280" math="0" shadow="0">
+      <root>
+        <mxCell id="0"/><mxCell id="1" parent="0"/>
+        <mxCell id="t1" value="NIXL 跨异构 TP 搬 NVFP4 KV 页：按 KV 头重切 · #64475" style="text;html=1;fontSize=14;fontColor=#333333;" vertex="1" parent="1">
+          <mxGeometry x="30" y="10" width="820" height="22" as="geometry"/>
+        </mxCell>
+        <mxCell id="t2" value="PD 分离新能力：prefill 和 decode 实例可以跑不同的 TP（如 P=TP1、D=TP4），KV 页传输时按目标 TP 重排头部" style="text;html=1;fontSize=11;fontColor=#666666;" vertex="1" parent="1">
+          <mxGeometry x="30" y="32" width="820" height="16" as="geometry"/>
+        </mxCell>
+        <mxCell id="src" value="prefill 实例（TP1）&lt;br&gt;NVFP4 KV 页&lt;br&gt;布局按 KV 头为主序&lt;br&gt;（AttentionSpec.kv_head_major_slots 声明）" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#eef3fd;strokeColor=#7a97d4;fontSize=11;fontColor=#333333;" vertex="1" parent="1">
+          <mxGeometry x="30" y="60" width="300" height="76" as="geometry"/>
+        </mxCell>
+        <mxCell id="mid" value="NIXL 传输&lt;br&gt;按目标 TP 重排头部" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff3e0;strokeColor=#e0a04a;fontSize=11;fontColor=#333333;" vertex="1" parent="1">
+          <mxGeometry x="360" y="66" width="160" height="64" as="geometry"/>
+        </mxCell>
+        <mxCell id="dst" value="decode 实例（TP4）&lt;br&gt;同一批页按 TP4 的头分布&lt;br&gt;重切落位" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#e9f6ee;strokeColor=#59a97c;fontSize=11;fontColor=#333333;" vertex="1" parent="1">
+          <mxGeometry x="550" y="60" width="300" height="76" as="geometry"/>
+        </mxCell>
+        <mxCell id="e1" style="html=1;endArrow=block;endFill=1;strokeColor=#7a879d;strokeWidth=1.4;rounded=0;" edge="1" parent="1">
+          <mxGeometry relative="1" as="geometry"><mxPoint x="330" y="98" as="sourcePoint"/><mxPoint x="360" y="98" as="targetPoint"/></mxGeometry>
+        </mxCell>
+        <mxCell id="e2" style="html=1;endArrow=block;endFill=1;strokeColor=#7a879d;strokeWidth=1.4;rounded=0;" edge="1" parent="1">
+          <mxGeometry relative="1" as="geometry"><mxPoint x="520" y="98" as="sourcePoint"/><mxPoint x="550" y="98" as="targetPoint"/></mxGeometry>
+        </mxCell>
+        <mxCell id="rej" value="仍受限：FlashInfer 的 NVFP4 页头内字节不连续 → 异构 TP 下一律被拒（#61865 起的行为不变）；MiniMax-M3 的 MSA NVFP4 后端已声明该布局，GB200 单测通过（nixl_connector / desc_geometry / kv_cache_utils）" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f2f2f4;strokeColor=#b9bcc4;fontSize=11;fontColor=#333333;" vertex="1" parent="1">
+          <mxGeometry x="30" y="152" width="820" height="52" as="geometry"/>
+        </mxCell>
+        <mxCell id="n1" value="出自 MiniMax-M3.1-Flash 系列（#63232）的独立拆分，基于 main、不依赖该系列其余 PR" style="text;html=1;fontSize=10;fontColor=#999999;" vertex="1" parent="1">
+          <mxGeometry x="30" y="214" width="820" height="16" as="geometry"/>
+        </mxCell>
+        <mxCell id="lg" value="图例：蓝＝源页 · 绿＝目标页 · 琥珀＝传输与重排 · 灰＝仍受限的边界" style="text;html=1;fontSize=11;fontColor=#666666;" vertex="1" parent="1">
+          <mxGeometry x="30" y="238" width="820" height="18" as="geometry"/>
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>
