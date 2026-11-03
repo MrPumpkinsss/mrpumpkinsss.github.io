@@ -167,18 +167,3 @@ redirect_from:
   </ul>
 </div>
 
-<div class="about-section">
-  <h2><span class="i18n-zh">技术栈</span><span class="i18n-en">Technical Toolkit</span></h2>
-  <p>
-    <span class="i18n-zh"><strong>编程语言：</strong></span><span class="i18n-en"><strong>Programming Languages:</strong></span><br>
-    <code>Python</code> &nbsp; <code>C/C++</code> &nbsp; <code>MATLAB</code>
-  </p>
-  <p>
-    <span class="i18n-zh"><strong>框架与平台：</strong></span><span class="i18n-en"><strong>Frameworks &amp; Platforms:</strong></span><br>
-    <code>PyTorch</code> &nbsp; <code>vLLM</code> &nbsp; <code>SGLang</code> &nbsp; <code>OpenCV</code> &nbsp; <code>TensorFlow</code> &nbsp; <code>Raspberry Pi</code> &nbsp; <code>Arduino</code>
-  </p>
-  <p>
-    <span class="i18n-zh"><strong>语言能力：</strong></span><span class="i18n-en"><strong>Spoken Languages:</strong></span><br>
-    🇨🇳 <span class="i18n-zh">中文（母语）</span><span class="i18n-en">Mandarin (Native)</span> &nbsp; 🇬🇧 <span class="i18n-zh">英语（流利）</span><span class="i18n-en">English (Fluent)</span>
-  </p>
-</div>
