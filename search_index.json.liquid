@@ -1,0 +1,14 @@
+---
+layout: null
+permalink: /search-index.json
+---
+[
+{% assign ns_pages = site.pages | where_exp: "item", "item.url contains '/notes'" | sort: "url" %}
+{% assign first = true %}
+{% for p in ns_pages %}
+{% if p.title %}
+{% unless first %},{% endunless %}{% assign first = false %}
+{"url": {{ p.url | jsonify }}, "title": {{ p.title | jsonify }}, "text": {{ p.content | split: "</style>" | last | strip_html | normalize_whitespace | jsonify }}}
+{% endif %}
+{% endfor %}
+]
