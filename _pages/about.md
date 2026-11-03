@@ -126,11 +126,7 @@ redirect_from:
 
 <div class="about-section">
   <h2><span class="i18n-zh">项目</span><span class="i18n-en">Projects</span></h2>
-  <p>
-    <span class="i18n-zh">❗️这一部分的更多信息，建议直接访问上方导航栏的「项目」页面。</span>
-    <span class="i18n-en">❗️For more information about this part, I suggest you go to the <a href="/projects/">Projects</a> section in the navigation bar above.</span>
-  </p>
-  
+
   <h3><span class="i18n-zh">AI 电磁炮</span><span class="i18n-en">AI-Powered Electromagnetic Cannon</span></h3>
   <p>
     <span class="i18n-zh">一门能够自动瞄准并高速发射磁体的电磁炮。</span>
