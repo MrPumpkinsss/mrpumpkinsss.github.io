@@ -96,6 +96,11 @@ author_profile: true
       <span class="cat-tag analysis"><span class="i18n-zh">源码剖析</span><span class="i18n-en">source</span></span>
       <span class="cat-desc"><span class="i18n-zh">长 prompt 怎么被预算切块、和 decode 混批：五级 min 漏斗、非最终 chunk 不采样、边界修剪规则。</span><span class="i18n-en">How long prompts are split by the token budget and co-batched with decode: the funnel, chunk states, and boundary rules.</span></span>
     </li>
+    <li>
+      <a href="/notes/vllm-dspark-dflash/"><span class="i18n-zh">DSpark 与 DFlash 起草器</span><span class="i18n-en">DSpark &amp; DFlash drafters</span></a>
+      <span class="cat-tag analysis"><span class="i18n-zh">源码剖析</span><span class="i18n-en">source</span></span>
+      <span class="cat-desc"><span class="i18n-zh">一次并行前向起草一整块：DFlash 填空式（1+N），DSpark 半自回归（N 位锚点先行 + Markov 头）；缩减词表、概率采样、FULL CUDA graph。</span><span class="i18n-en">Draft a whole block in one parallel forward: DFlash fill-in-the-blank (1+N), DSpark semi-autoregressive (N slots, anchor-first + Markov head); reduced vocab, probabilistic sampling, FULL CUDA graphs.</span></span>
+    </li>
   </ul>
 </div>
 

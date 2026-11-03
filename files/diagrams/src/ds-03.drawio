@@ -1,0 +1,45 @@
+<mxfile host="app.diagrams.net">
+  <diagram name="d" id="d">
+    <mxGraphModel dx="1000" dy="600" grid="0" page="1" pageWidth="880" pageHeight="280" math="0" shadow="0">
+      <root>
+        <mxCell id="0"/><mxCell id="1" parent="0"/>
+        <mxCell id="t1" value="缩减词表概率采样 ＋ 置信度供自适应验证（DSpark）" style="text;html=1;fontSize=14;fontColor=#333333;" vertex="1" parent="1">
+          <mxGeometry x="30" y="10" width="820" height="22" as="geometry"/>
+        </mxCell>
+        <mxCell id="t2" value="草稿只在 top-k 草稿词表上算 logits；采样搬回目标词表空间；置信度头 / 接受估计器喂 AV" style="text;html=1;fontSize=11;fontColor=#666666;" vertex="1" parent="1">
+          <mxGeometry x="30" y="32" width="820" height="16" as="geometry"/>
+        </mxCell>
+        <mxCell id="f1" value="base logits&lt;br&gt;top-k 草稿词表&lt;br&gt;（dspark_draft_topk）" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#eef3fd;strokeColor=#7a97d4;fontSize=11;fontColor=#333333;" vertex="1" parent="1">
+          <mxGeometry x="30" y="60" width="200" height="70" as="geometry"/>
+        </mxCell>
+        <mxCell id="f2" value="d2t scatter&lt;br&gt;进目标词表 buffer&lt;br&gt;非草稿列 ＝ -inf" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff3e0;strokeColor=#e0a04a;fontSize=11;fontColor=#333333;" vertex="1" parent="1">
+          <mxGeometry x="255" y="60" width="220" height="70" as="geometry"/>
+        </mxCell>
+        <mxCell id="f3" value="gumbel 概率采样&lt;br&gt;（温度 ＋ per-request 种子；&lt;br&gt;watermarker 同路径）" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#eef3fd;strokeColor=#7a97d4;fontSize=11;fontColor=#333333;" vertex="1" parent="1">
+          <mxGeometry x="500" y="60" width="190" height="70" as="geometry"/>
+        </mxCell>
+        <mxCell id="f4" value="草稿 token&lt;br&gt;→ 无损拒绝采样" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#e9f6ee;strokeColor=#59a97c;fontSize=11;fontColor=#333333;" vertex="1" parent="1">
+          <mxGeometry x="715" y="60" width="135" height="70" as="geometry"/>
+        </mxCell>
+        <mxCell id="e1" style="html=1;endArrow=block;endFill=1;strokeColor=#7a879d;strokeWidth=1.4;rounded=0;" edge="1" parent="1">
+          <mxGeometry relative="1" as="geometry"><mxPoint x="230" y="95" as="sourcePoint"/><mxPoint x="255" y="95" as="targetPoint"/></mxGeometry>
+        </mxCell>
+        <mxCell id="e2" style="html=1;endArrow=block;endFill=1;strokeColor=#7a879d;strokeWidth=1.4;rounded=0;" edge="1" parent="1">
+          <mxGeometry relative="1" as="geometry"><mxPoint x="475" y="95" as="sourcePoint"/><mxPoint x="500" y="95" as="targetPoint"/></mxGeometry>
+        </mxCell>
+        <mxCell id="e3" style="html=1;endArrow=block;endFill=1;strokeColor=#7a879d;strokeWidth=1.4;rounded=0;" edge="1" parent="1">
+          <mxGeometry relative="1" as="geometry"><mxPoint x="690" y="95" as="sourcePoint"/><mxPoint x="715" y="95" as="targetPoint"/></mxGeometry>
+        </mxCell>
+        <mxCell id="av" value="置信度头（随 checkpoint 训练）或在线接受估计器 → 每个草稿位的置信度 → AV 预算选择（每步动态定草稿深度）；有训练好的头就不用估计器" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f2f2f4;strokeColor=#b9bcc4;fontSize=11;fontColor=#333333;" vertex="1" parent="1">
+          <mxGeometry x="30" y="150" width="820" height="44" as="geometry"/>
+        </mxCell>
+        <mxCell id="n1" value="概率拒绝采样直接在目标词表空间进行（草稿 id 按目标 id 索引），无损失——纯 greedy argmax 反而会破坏分布保证" style="text;html=1;fontSize=10;fontColor=#999999;" vertex="1" parent="1">
+          <mxGeometry x="30" y="204" width="820" height="16" as="geometry"/>
+        </mxCell>
+        <mxCell id="lg" value="图例：蓝＝草稿侧 · 琥珀＝词表映射 · 绿＝产物 · 灰＝AV 供能 · 数字/结论来自源码与 PR，未亲自复现" style="text;html=1;fontSize=11;fontColor=#666666;" vertex="1" parent="1">
+          <mxGeometry x="30" y="228" width="820" height="18" as="geometry"/>
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>

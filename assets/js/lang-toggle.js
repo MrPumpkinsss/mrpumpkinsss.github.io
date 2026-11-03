@@ -29,6 +29,7 @@
     'KV Connector':  { zh: 'KV Connector 机制剖析', en: 'KV Connector Internals' },
     'PP Interleaving': { zh: 'PP 流水线交错执行',   en: 'PP Pipeline Interleaving' },
     'Speculative Decoding': { zh: '投机解码机制细节', en: 'Speculative Decoding Mechanics' },
+    'DSpark & DFlash': { zh: 'DSpark 与 DFlash 起草器', en: 'DSpark & DFlash Drafters' },
     'Chunked Prefill': { zh: 'Chunked Prefill 机制剖析', en: 'Chunked Prefill Internals' }
   };
 
