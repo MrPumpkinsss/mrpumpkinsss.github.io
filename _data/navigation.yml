@@ -29,9 +29,9 @@ main:
   - title: "<span class='i18n-zh'>学习笔记</span><span class='i18n-en'>Study Notes</span>"
     url: /notes/
 
-  - title: "<span class='i18n-zh'>我的树莓派</span><span class='i18n-en'>My RPI</span>"
-    url: /MyRPI/
-    
+  #- title: "<span class='i18n-zh'>我的树莓派</span><span class='i18n-en'>My RPI</span>"
+  #  url: /MyRPI/
+
   #- title: "CV"
    # url: /cv/
     
