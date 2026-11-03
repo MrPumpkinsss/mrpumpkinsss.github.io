@@ -7,7 +7,10 @@
   if (!/^\/notes(\/|$)/.test(location.pathname)) return;
 
   var CSS = [
-    '.ns-btn{position:fixed;right:18px;bottom:18px;z-index:9998;display:flex;align-items:center;gap:8px;',
+    '#ns-toggle a{cursor:pointer}',
+    '@media (min-width:768px){ .ns-btn{display:none} }',
+    '@media (max-width:767px){ #ns-toggle{display:none} .ns-btn{display:flex} }',
+    '.ns-btn{position:fixed;right:14px;bottom:18px;z-index:9998;display:none;align-items:center;gap:8px;',
       'padding:10px 16px;border:1px solid #ccc;border-radius:999px;background:#fff;color:#333;cursor:pointer;',
       'box-shadow:0 2px 10px rgba(0,0,0,.15);font-size:.9rem}',
     '.ns-btn kbd{margin-left:2px}',
@@ -57,11 +60,29 @@
     st.textContent = CSS;
     document.head.appendChild(st);
 
-    var btn = document.createElement('button');
-    btn.className = 'ns-btn';
-    btn.innerHTML = '🔍 ' + t('搜索笔记', 'Search notes') + ' <kbd>Ctrl K</kbd>';
-    btn.addEventListener('click', openSearch);
-    document.body.appendChild(btn);
+    // masthead entry (desktop): search icon next to lang/theme toggles
+    var nav = document.querySelector('.greedy-nav');
+    if (nav) {
+      var li = document.createElement('li');
+      li.id = 'ns-toggle';
+      li.className = 'masthead__menu-item persist tail';
+      li.innerHTML = '<a title="Search notes / 搜索笔记 (Ctrl+K)">' +
+        '<i class="fa-solid fa-magnifying-glass" aria-hidden="true"></i></a>';
+      li.querySelector('a').addEventListener('click', function (e) {
+        e.preventDefault();
+        openSearch();
+      });
+      var langItem = nav.querySelector('#lang-toggle');
+      if (langItem) nav.querySelector('#lang-toggle').parentNode.insertBefore(li, langItem);
+      else nav.querySelector('ul.visible-links').appendChild(li);
+    } else {
+      // fallback: floating button
+      var fbtn = document.createElement('button');
+      fbtn.className = 'ns-btn';
+      fbtn.innerHTML = '🔍 ' + t('搜索笔记', 'Search notes') + ' <kbd>Ctrl K</kbd>';
+      fbtn.addEventListener('click', openSearch);
+      document.body.appendChild(fbtn);
+    }
 
     var scrim = document.createElement('div');
     scrim.className = 'ns-scrim';
