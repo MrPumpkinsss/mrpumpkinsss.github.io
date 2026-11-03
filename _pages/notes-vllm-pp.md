@@ -130,7 +130,7 @@ html[data-theme="dark"] .diagram-fig { border-color:#444; }
 </p>
 
 <p>
-  <span class="i18n-zh">请求怎么进 batch：调度器按 running 队列顺序扫描，跳过未到期（decode_stagger）、被 defer 或块分配失败的请求，剩余 token 预算装得下多少就装多少；新请求从 waiting 队列按 FCFS 追加到 running 尾部。同步调度下 decode 请求<strong>每个 step 都在 batch 里</strong>——上一步采样的 token 由调度器转交进下一步的 <code>SchedulerOutput</code>；异步 + MRv2 下同一请求强制隔 pp_size 步才再进（decode_stagger），于是 N 个在飞 batch 的 decode 请求集合天然互不相同。</span>
+  <span class="i18n-zh">请求怎么进 batch：调度器按 running 队列顺序扫描，跳过未到期（decode_stagger）、被 defer 或块分配失败的请求，剩余 token 预算装得下多少就装多少；新请求从 waiting 队列按 FCFS 追加到 running 尾部。同一个请求会不会连着两个 step 都 decode，由一条算术天然管住：<code>num_new_tokens ＝ num_tokens_with_spec ＋ 占位符 − num_computed_tokens</code>——decode 的那 1 个 token 在<strong>调度时</strong>就把 <code>num_computed_tokens</code> 推进了，而新的采样 token 要等这一步的输出回来才计入，所以在飞期间该请求 <code>num_new_tokens ＝ 0</code>、自然不出现在后续步里：PP 下同一请求<strong>天然隔 pp_size 步才再进</strong>（两代 runner 都一样，不需要显式机制）；MRv2 的 <code>decode_stagger</code> 是在这之上把它<strong>显式化</strong>，以对齐 worker 侧采样 token 广播槽位环。不开 PP 的普通 TP 部署（batch queue 深度为 1，排完一步等结果再排下一步）才是「decode 每 step 都在批里」。</span>
 </p>
 
 <h2 id="decode-stagger">
@@ -237,7 +237,7 @@ html[data-theme="dark"] .diagram-fig { border-color:#444; }
 <ul>
   <li><strong>PCP / DCP 不是流水线</strong>：<span class="i18n-zh"><code>prefill_context_parallel_size</code>（PCP，预填充上下文并行）/ <code>decode_context_parallel_size</code>（DCP，解码上下文并行）是沿<strong>序列维</strong>切的上下文并行，和 PP（沿层切）正交。周报里「bench forward 加 PCP 支持」说的就是它。</span></li>
   <li><strong><span class="i18n-zh">没有 1F1B 虚拟级</span></strong>：<span class="i18n-zh">层不拆虚拟段；「交错」全部由多 step 在飞实现。单步内也不再切微批（runner 里还留着「Support overlapping micro-batches」的 TODO，对应已关闭的 issue #18019）。</span></li>
-  <li><strong><span class="i18n-zh">V1 runner 的限制</span></strong>：<span class="i18n-zh">异步调度 + PP 只在 MRv2（<code>VLLM_USE_V2_MODEL_RUNNER</code>，新平台已默认启用）下完整支持；stagger 也只挂在 <code>use_v2_model_runner</code> 分支。</span></li>
+  <li><strong><span class="i18n-zh">机制 × 版本归属</span></strong>：<span class="i18n-zh">PP 切层、step 广播、级间传递、batch queue 让 pp_size 步在飞——V1 引擎<strong>两代 runner 通用</strong>（<code>max_concurrent_batches ＝ pp_size</code>，不看 runner 版本）；<code>decode_stagger</code>、pp_size＋1 深度、GPU broadcast 回传、占位符记账——<strong>异步调度 ＋ MRv2 专属</strong>（源码注释：V1 Model Runner does not fully support async scheduling with PP——旧 runner 上 PP&gt;1 时 async 不生效，退化回同步、隐式间隔照旧）。本页的引擎核心忙循环、batch queue、rpc_broadcast_mq 都是 V1 引擎的东西——更早的 V0 引擎（<code>VLLM_USE_V1=0</code>）的 PP 是另一套实现，全部不适用。「重叠」不是 MRv2 才有，MRv2 的增量是更深的重叠（＋1）与更精细的同步。</span></li>
   <li><strong><span class="i18n-zh">prefill 节流</span></strong>：<span class="i18n-zh">DP+PP 下有 <code>prefill_schedule_interval</code> 节奏控制，<code>defer_prefills</code> 把 prefill chunk 挪到 cadence 对齐的 step，decode 优先填满流水。</span></li>
   <li><strong><span class="i18n-zh">和 KV connector 的交集</span></strong>：<span class="i18n-zh">PD 分离 + PP 时，connector 握手按 (pp_rank, tp_rank) 建通道（<code>set_xfer_handshake_metadata_pp_aware</code>，不支持 PP 分片的 connector 会直接报错）——见「<a href="/notes/vllm-kv-connector/">KV Connector 机制剖析</a>」。</span></li>
 </ul>
